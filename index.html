@@ -1192,6 +1192,10 @@
       <label>Nome da peça</label>
       <input type="text" id="nameInput" placeholder="Ex: Camisa de linho">
     </div>
+    <div class="field">
+      <label>Código (opcional)</label>
+      <input type="text" id="codeInput" placeholder="Ex: BERMUDA-PRETA-NIKE — deixe em branco pra gerar automático">
+    </div>
     <div class="field-row">
       <div class="field">
         <label>Preço (R$)</label>
@@ -1517,6 +1521,7 @@
   const stockLogList = document.getElementById('stockLogList');
   const imgInput = document.getElementById('imgInput');
   const nameInput = document.getElementById('nameInput');
+  const codeInput = document.getElementById('codeInput');
   const catInput = document.getElementById('catInput');
   const descInput = document.getElementById('descInput');
   const stockInput = document.getElementById('stockInput');
@@ -2870,6 +2875,7 @@
 
   function resetForm(){
     nameInput.value = '';
+    codeInput.value = '';
     catInput.value = '';
     descInput.value = '';
     imgInput.value = '';
@@ -2893,6 +2899,7 @@
   function startEditItem(it){
     editingItemId = it.id;
     nameInput.value = it.name;
+    codeInput.value = it.code || '';
     catInput.value = it.category || '';
     descInput.value = it.description || '';
     priceInput.value = (it.price === undefined || it.price === null) ? '' : it.price;
@@ -3018,6 +3025,11 @@
 
     const priceVal = priceInput.value.trim() === '' ? null : parseFloat(priceInput.value);
     const oldPriceVal = oldPriceInput.value.trim() === '' ? null : parseFloat(oldPriceInput.value);
+    const typedCode = codeInput.value.trim();
+    if(typedCode){
+      const dup = items.find(i => i.id !== editingItemId && (i.code || '').toLowerCase() === typedCode.toLowerCase());
+      if(dup){ alert('Já existe uma peça com o código "' + typedCode + '" (' + dup.name + '). Escolha outro código.'); return; }
+    }
 
     // Monta o estoque por tamanho só com os tamanhos selecionados, e soma pra ter o total.
     const stockBySizeObj = {};
@@ -3034,6 +3046,7 @@
       const prevTotal = prevItem ? itemStock(prevItem) : 0;
       const { data, error } = await sb.from('products').update({
         name: name,
+        code: typedCode || prevItem.code,
         category: catInput.value.trim(),
         description: descInput.value.trim(),
         image_url: pendingImageDataUrl,
@@ -3070,7 +3083,7 @@
     }
 
     saveItem.disabled = true;
-    const code = await nextCode();
+    const code = typedCode || await nextCode();
     const { data, error } = await sb.from('products').insert({
       code: code,
       name: name,
