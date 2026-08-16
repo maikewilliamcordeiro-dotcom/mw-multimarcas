@@ -18,6 +18,9 @@
     --ink:#181615;
     --muted:#78716c;
     --border:#e7e3e0;
+    --admin-blue:#2f5fdb;
+    --admin-blue-dark:#2348b0;
+    --admin-page-bg:#f4f6fb;
   }
   *{box-sizing:border-box;}
   body{
@@ -365,62 +368,50 @@
   .tab-pane{ display:none; }
   .tab-pane.active{ display:block; }
 
-  /* Admin dashboard layout (Área do lojista) — feels like its own separate app screen */
-  #overlay{ background:var(--bg); padding:0; align-items:stretch; }
-  .admin-panel{ padding:0; width:100%; max-width:none; min-height:100vh; overflow:hidden; border-radius:0; }
-  .admin-panel .close-x{ z-index:6; color:#fff; }
-  @media (min-width:860px){
-    .admin-panel .close-x{ color:var(--muted); }
-  }
-  .admin-back-link{ display:none; }
-  .admin-back-link:hover{ color:#fff; }
-  @media (min-width:860px){
-    .admin-back-link{
-      display:flex; align-items:center; gap:6px; color:rgba(255,255,255,.55); text-decoration:none;
-      font-size:11.5px; font-weight:600; padding:0 22px 16px; cursor:pointer; background:none; border:none;
-    }
-  }
+  /* Admin dashboard layout (Área do lojista) — clean light "SaaS" style, inspired by Líder Store admin */
+  #overlay{ background:var(--admin-page-bg); padding:0; align-items:stretch; }
+  .admin-panel{ padding:0; width:100%; max-width:none; min-height:100vh; overflow:hidden; border-radius:0; background:var(--admin-page-bg); }
+  .admin-panel .close-x{ z-index:6; color:var(--muted); }
   .admin-layout{ display:flex; flex-direction:column; min-height:100vh; }
-  .admin-sidebar{
-    display:flex; flex-direction:row; align-items:center; gap:2px; overflow-x:auto;
-    background:var(--black); padding:16px 44px 0 14px; -webkit-overflow-scrolling:touch;
+
+  .admin-topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    background:#fff; border-bottom:1px solid var(--border); padding:16px 20px 16px 18px;
   }
-  .admin-sidebar-title{ display:none; }
-  .admin-user-email{ display:none; }
+  .admin-topbar-title{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; color:var(--ink); }
+  .admin-topbar-title .logo-dot{ width:26px; height:26px; border-radius:50%; background:var(--admin-blue); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0; }
+  .admin-topbar-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .admin-user-email{ font-size:11.5px; color:var(--muted); }
+  .btn-sm{ padding:7px 14px; font-size:12.5px; }
+
+  .admin-tabbar{
+    display:flex; gap:4px; overflow-x:auto; background:#fff; border-bottom:1px solid var(--border);
+    padding:0 18px; -webkit-overflow-scrolling:touch;
+  }
   .admin-nav-btn{
     display:flex; align-items:center; gap:6px; background:none; border:none;
-    color:rgba(255,255,255,.6); padding:10px 12px; font-size:12.5px; font-weight:700;
-    white-space:nowrap; cursor:pointer; border-bottom:3px solid transparent; border-radius:0;
+    color:var(--muted); padding:13px 12px; font-size:13px; font-weight:600;
+    white-space:nowrap; cursor:pointer; border-bottom:2px solid transparent; border-radius:0;
   }
-  .admin-nav-btn .ic{ font-size:14px; }
-  .admin-nav-btn.active{ color:#fff; border-bottom-color:var(--red); }
-  .admin-sidebar-footer{ display:none; }
-  .admin-content{ padding:20px; }
+  .admin-nav-btn .ic{ display:none; }
+  .admin-nav-btn.active{ color:var(--admin-blue); border-bottom-color:var(--admin-blue); font-weight:700; }
+
+  .admin-content{ padding:18px; }
+  .admin-scope .admin-content .tab-pane.active{
+    background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px;
+  }
   @media (min-width:860px){
-    .admin-panel{ max-width:980px; }
-    .admin-layout{ flex-direction:row; height:100vh; }
-    .admin-sidebar{
-      flex-direction:column; align-items:stretch; width:230px; flex-shrink:0;
-      overflow-x:visible; overflow-y:auto; padding:26px 0 16px; gap:0;
-      border-right:1px solid rgba(255,255,255,.08);
-    }
-    .admin-sidebar-title{
-      display:block; color:#fff; font-size:15px; font-weight:800; letter-spacing:.5px;
-      padding:0 22px 20px;
-    }
-    .admin-nav-btn{
-      justify-content:flex-start; padding:12px 22px; border-bottom:none;
-      border-left:3px solid transparent; font-size:13px;
-    }
-    .admin-nav-btn.active{ background:rgba(255,255,255,.07); border-left-color:var(--red); }
-    .admin-sidebar-footer{
-      display:block; margin-top:auto; padding:16px 22px 0; border-top:1px solid rgba(255,255,255,.08);
-    }
-    .admin-user-email{
-      display:block; color:rgba(255,255,255,.5); font-size:11px; margin-bottom:10px; word-break:break-all;
-    }
-    .admin-content{ flex:1; overflow-y:auto; padding:30px 34px; }
+    .admin-panel{ max-width:none; }
+    .admin-topbar{ padding:18px 34px; }
+    .admin-tabbar{ padding:0 34px; }
+    .admin-content{ padding:28px 34px 40px; max-width:1080px; margin:0 auto; width:100%; }
+    .admin-scope .admin-content .tab-pane.active{ padding:26px 28px; }
   }
+  /* Admin-scope color accents: blue instead of the storefront red, only inside admin/owner areas */
+  .admin-scope .btn-primary{ background:var(--admin-blue); }
+  .admin-scope .btn-primary:hover{ background:var(--admin-blue-dark); }
+  .admin-scope .size-picker span.sel{ background:var(--admin-blue); border-color:var(--admin-blue); }
+  .admin-scope .tab-btn.active:not(.admin-nav-btn){ border-bottom-color:var(--admin-blue); }
   .field{ margin-bottom:14px; }
   .field label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px; }
   .field input[type=text], .field input[type=number], .field input[type=email], .field input[type=password], .field input[type=tel], .field textarea, .field input[type=file]{
@@ -928,23 +919,25 @@
 </button>
 
 <!-- Owner Panel -->
-<div class="overlay" id="overlay">
+<div class="overlay admin-scope" id="overlay">
   <div class="panel admin-panel">
     <button class="close-x" id="closePanel">&times;</button>
     <div class="admin-layout">
-      <nav class="admin-sidebar">
-        <div class="admin-sidebar-title">Área do lojista</div>
-        <button class="admin-back-link" id="backToStoreBtn">&larr; Voltar para a loja</button>
-        <button class="tab-btn admin-nav-btn active" data-tab="itens"><span class="ic">👕</span> Peças</button>
-        <button class="tab-btn admin-nav-btn" data-tab="estoque"><span class="ic">📊</span> Estoque</button>
-        <button class="tab-btn admin-nav-btn" data-tab="colecoes"><span class="ic">🏷️</span> Coleções</button>
-        <button class="tab-btn admin-nav-btn" data-tab="galeria"><span class="ic">🖼️</span> Galeria</button>
-        <button class="tab-btn admin-nav-btn" data-tab="banners"><span class="ic">📣</span> Promoções</button>
-        <button class="tab-btn admin-nav-btn" data-tab="loja"><span class="ic">💬</span> WhatsApp</button>
-        <div class="admin-sidebar-footer">
-          <div class="admin-user-email" id="adminUserEmail"></div>
-          <button class="btn btn-ghost" id="adminSignOutBtn">Sair da conta</button>
+      <div class="admin-topbar">
+        <div class="admin-topbar-title"><span class="logo-dot">MW</span> Painel Admin — MW Multimarcas</div>
+        <div class="admin-topbar-right">
+          <span class="admin-user-email" id="adminUserEmail"></span>
+          <button class="btn btn-ghost btn-sm" id="backToStoreBtn">Ver site</button>
+          <button class="btn btn-ghost btn-sm" id="adminSignOutBtn">Sair</button>
         </div>
+      </div>
+      <nav class="admin-tabbar">
+        <button class="tab-btn admin-nav-btn active" data-tab="itens">Produtos</button>
+        <button class="tab-btn admin-nav-btn" data-tab="estoque">Estoque</button>
+        <button class="tab-btn admin-nav-btn" data-tab="colecoes">Coleções</button>
+        <button class="tab-btn admin-nav-btn" data-tab="galeria">Galeria</button>
+        <button class="tab-btn admin-nav-btn" data-tab="banners">Banner</button>
+        <button class="tab-btn admin-nav-btn" data-tab="loja">Configurações</button>
       </nav>
       <div class="admin-content">
 
@@ -1060,27 +1053,68 @@
 
     <!-- WHATSAPP TAB -->
     <div class="tab-pane" id="tab-loja">
-      <h2 style="font-size:16px;">Número de WhatsApp da loja</h2>
-      <p class="hint" style="margin-bottom:12px;">Informe com código do país e DDD, só números. Exemplo: 5511999998888. É para este número que os pedidos dos clientes serão enviados.</p>
-      <div class="field">
-        <label>WhatsApp</label>
-        <input type="text" id="whatsappInput" placeholder="Ex: 5511999998888">
+      <h2 style="font-size:16px;">Configurações da loja</h2>
+      <div class="field-row">
+        <div class="field">
+          <label>Nome da loja</label>
+          <input type="text" id="storeNameInput" placeholder="Ex: MW Multimarcas">
+        </div>
+        <div class="field">
+          <label>WhatsApp (com DDI+DDD, só números)</label>
+          <input type="text" id="whatsappInput" placeholder="Ex: 5511999998888">
+        </div>
       </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Instagram (sem @)</label>
+          <input type="text" id="storeInstagramInput" placeholder="Ex: mwmultimarcas">
+        </div>
+        <div class="field">
+          <label>Logo da loja</label>
+          <div class="gallery-btn-row" style="align-items:center; gap:10px;">
+            <img id="storeLogoPreview" src="" style="width:34px; height:34px; border-radius:8px; object-fit:cover; display:none; background:#f0ece6;">
+            <input type="file" id="storeLogoInput" accept="image/*">
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Mensagem do WhatsApp — "Comprar" (produto único)</label>
+        <textarea id="whatsappMsgSingleInput" rows="5" placeholder="Olá! Quero comprar esta peça: {peca} ({codigo}) - Tamanho: {tamanho} - {preco}"></textarea>
+        <div class="hint" style="margin-top:4px;">Use: {codigo} {peca} {tamanho} {quantidade} {preco}</div>
+      </div>
+      <div class="field">
+        <label>Mensagem do WhatsApp — Carrinho</label>
+        <textarea id="whatsappMsgCartInput" rows="5" placeholder="Olá! Quero comprar as peças abaixo na {loja}: {itens}"></textarea>
+        <div class="hint" style="margin-top:4px;">Use: {loja} {itens} — {itens} é substituído pela lista de peças do carrinho.</div>
+      </div>
+
       <div class="panel-actions">
-        <button class="btn btn-primary" id="saveWhatsapp">Salvar número</button>
+        <button class="btn btn-primary" id="saveStoreSettings">Salvar configurações</button>
       </div>
 
       <hr class="divider">
 
+      <div class="admin-table-header">
+        <div>
+          <h2 style="font-size:16px; margin:0;">Administradores</h2>
+          <p class="hint" style="margin:4px 0 0;">Pessoas com acesso a este painel. Peça pro Claude criar o login de um novo administrador no Supabase.</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="addAdminBtn" type="button">+ Novo admin</button>
+      </div>
+      <div class="owner-list" id="adminsList" style="margin-top:10px;"></div>
+
+      <hr class="divider">
+
       <h2 style="font-size:16px;">Conta do lojista</h2>
-      <p class="hint" style="margin-bottom:12px;">Seu login é gerenciado pelo Supabase (email e senha). Para trocar a senha, acesse o painel do Supabase em Authentication &gt; Users. Você também pode sair da conta pelo menu à esquerda (ou no topo, no celular).</p>
+      <p class="hint" style="margin-bottom:12px;">Seu login é gerenciado pelo Supabase (email e senha). Para trocar a senha, acesse o painel do Supabase em Authentication &gt; Users. Você também pode sair da conta pelo topo da tela.</p>
     </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="overlay" id="adminLoginOverlay">
+<div class="overlay admin-scope" id="adminLoginOverlay">
   <div class="panel" style="max-width:340px;">
     <button class="close-x" id="closeAdminLogin">&times;</button>
     <h2>Área do lojista</h2>
@@ -1101,7 +1135,7 @@
 </div>
 
 <!-- Item Form Overlay (Novo/Editar produto) -->
-<div class="overlay" id="itemFormOverlay">
+<div class="overlay admin-scope" id="itemFormOverlay">
   <div class="panel item-form-panel">
     <button class="close-x" id="closeItemFormOverlay">&times;</button>
     <h2 style="font-size:16px;" id="itemFormTitle">Adicionar peça</h2>
@@ -1174,7 +1208,7 @@
 </div>
 
 <!-- Gallery Picker Overlay (used from item/banner forms) -->
-<div class="overlay" id="galleryPickerOverlay">
+<div class="overlay admin-scope" id="galleryPickerOverlay">
   <div class="panel">
     <button class="close-x" id="closeGalleryPicker">&times;</button>
     <h2>Escolher imagem da galeria</h2>
@@ -1764,6 +1798,12 @@
   let banners = [];
   let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
   let storeWhatsapp = '';
+  let storeName = 'MW Multimarcas';
+  let storeInstagram = '';
+  let storeLogoUrl = '';
+  let whatsappMsgSingle = '';
+  let whatsappMsgCart = '';
+  let storeAdmins = [];
   let imageBank = [];
   let galleryFolders = [];
   let activeGalleryFolder = 'all';
@@ -1795,21 +1835,28 @@
   }
 
   async function loadAllData(){
-    const [prodRes, bannerRes, tagRes, settRes, bankRes, folderRes] = await Promise.all([
+    const [prodRes, bannerRes, tagRes, settRes, bankRes, folderRes, adminRes] = await Promise.all([
       sb.from('products').select('*').order('created_at', { ascending: false }),
       sb.from('banners').select('*').order('sort_order', { ascending: true }),
       sb.from('collections').select('*').order('sort_order', { ascending: true }),
       sb.from('settings').select('*').eq('id', 1).maybeSingle(),
       currentSession ? sb.from('image_bank').select('*').order('created_at', { ascending: false }).limit(200) : Promise.resolve({ data: [] }),
-      currentSession ? sb.from('gallery_folders').select('*').order('sort_order', { ascending: true }) : Promise.resolve({ data: [] })
+      currentSession ? sb.from('gallery_folders').select('*').order('sort_order', { ascending: true }) : Promise.resolve({ data: [] }),
+      currentSession ? sb.from('store_admins').select('*').order('created_at', { ascending: true }) : Promise.resolve({ data: [] })
     ]);
     items = (prodRes.data || []).map(dbToItem).concat(MANUAL_PRODUCTS);
     banners = (bannerRes.data || []).map(dbToBanner);
     knownTags = (tagRes.data || []).map(dbToTag);
     storeWhatsapp = (settRes.data && settRes.data.whatsapp) || '';
+    storeName = (settRes.data && settRes.data.store_name) || 'MW Multimarcas';
+    storeInstagram = (settRes.data && settRes.data.instagram) || '';
+    storeLogoUrl = (settRes.data && settRes.data.logo_url) || '';
+    whatsappMsgSingle = (settRes.data && settRes.data.whatsapp_msg_single) || '';
+    whatsappMsgCart = (settRes.data && settRes.data.whatsapp_msg_cart) || '';
     knownSizes = (settRes.data && settRes.data.known_sizes) || DEFAULT_SIZES.slice();
     imageBank = (bankRes.data || []).map(r => ({ id: r.id, dataUrl: r.image_url, folderId: r.folder_id || null }));
     galleryFolders = (folderRes.data || []).map(dbToFolder);
+    storeAdmins = (adminRes.data || []).map(r => ({ id: r.id, email: r.email }));
   }
 
   async function loadStockLog(){
@@ -1911,7 +1958,15 @@
   const bannerList = document.getElementById('bannerList');
 
   const whatsappInput = document.getElementById('whatsappInput');
-  const saveWhatsappBtn = document.getElementById('saveWhatsapp');
+  const storeNameInput = document.getElementById('storeNameInput');
+  const storeInstagramInput = document.getElementById('storeInstagramInput');
+  const storeLogoInput = document.getElementById('storeLogoInput');
+  const storeLogoPreview = document.getElementById('storeLogoPreview');
+  const whatsappMsgSingleInput = document.getElementById('whatsappMsgSingleInput');
+  const whatsappMsgCartInput = document.getElementById('whatsappMsgCartInput');
+  const saveStoreSettingsBtn = document.getElementById('saveStoreSettings');
+  const adminsList = document.getElementById('adminsList');
+  const addAdminBtn = document.getElementById('addAdminBtn');
 
   const videoOverlay = document.getElementById('videoOverlay');
   const closeVideoOverlay = document.getElementById('closeVideoOverlay');
@@ -2493,22 +2548,39 @@
     }
   };
 
+  function fillTemplate(tpl, vars){
+    let out = tpl;
+    Object.keys(vars).forEach(k => { out = out.split('{' + k + '}').join(vars[k]); });
+    return out;
+  }
+
   buyNowBtn.onclick = () => {
     if(!modalSelectedSize){ alert('Escolha um tamanho antes de continuar.'); return; }
     if(!storeWhatsapp){
-      alert('A loja ainda não configurou o número de WhatsApp. Peça ao lojista para configurar em "Área do lojista" > "WhatsApp".');
+      alert('A loja ainda não configurou o número de WhatsApp. Peça ao lojista para configurar em "Área do lojista" > "Configurações".');
       return;
     }
-    const lines = [];
-    lines.push('Olá! Quero comprar esta peça:');
-    lines.push('');
-    lines.push('Código: ' + activeModalItem.code);
-    lines.push('Peça: ' + activeModalItem.name);
-    lines.push('Tamanho: ' + modalSelectedSize);
-    lines.push('Quantidade: ' + modalQty);
-    lines.push('');
-    lines.push('(Por favor, não altere esta mensagem — o código ajuda a loja a localizar a peça certa.)');
-    openWhatsapp(lines.join('\n'));
+    const precoTxt = (activeModalItem.price != null) ? formatPrice(activeModalItem.price) : '';
+    let message;
+    if(whatsappMsgSingle && whatsappMsgSingle.trim()){
+      message = fillTemplate(whatsappMsgSingle, {
+        codigo: activeModalItem.code, peca: activeModalItem.name, tamanho: modalSelectedSize,
+        quantidade: String(modalQty), preco: precoTxt
+      });
+    } else {
+      const lines = [];
+      lines.push('Olá! Quero comprar esta peça:');
+      lines.push('');
+      lines.push('Código: ' + activeModalItem.code);
+      lines.push('Peça: ' + activeModalItem.name);
+      lines.push('Tamanho: ' + modalSelectedSize);
+      lines.push('Quantidade: ' + modalQty);
+      if(precoTxt) lines.push('Preço: ' + precoTxt);
+      lines.push('');
+      lines.push('(Por favor, não altere esta mensagem — o código ajuda a loja a localizar a peça certa.)');
+      message = lines.join('\n');
+    }
+    openWhatsapp(message);
     itemOverlay.classList.remove('open');
   };
 
@@ -2567,22 +2639,29 @@
   checkoutWhatsappBtn.onclick = () => {
     if(!cart.length){ alert('Seu carrinho está vazio.'); return; }
     if(!storeWhatsapp){
-      alert('A loja ainda não configurou o número de WhatsApp. Peça ao lojista para configurar em "Área do lojista" > "WhatsApp".');
+      alert('A loja ainda não configurou o número de WhatsApp. Peça ao lojista para configurar em "Área do lojista" > "Configurações".');
       return;
     }
-    const lines = [];
-    lines.push('Olá! Quero comprar as peças abaixo:');
-    lines.push('');
-    cart.forEach(c => {
-      lines.push('Código: ' + c.code);
-      lines.push('Peça: ' + c.name);
-      lines.push('Tamanho: ' + c.size);
-      lines.push('Quantidade: ' + c.qty);
-      lines.push('---');
-    });
-    lines.push('');
-    lines.push('(Por favor, não altere esta mensagem — os códigos ajudam a loja a localizar as peças certas.)');
-    openWhatsapp(lines.join('\n'));
+    let message;
+    if(whatsappMsgCart && whatsappMsgCart.trim()){
+      const itensTxt = cart.map(c => 'Código: ' + c.code + '\nPeça: ' + c.name + '\nTamanho: ' + c.size + '\nQuantidade: ' + c.qty).join('\n---\n');
+      message = fillTemplate(whatsappMsgCart, { loja: storeName, itens: itensTxt });
+    } else {
+      const lines = [];
+      lines.push('Olá! Quero comprar as peças abaixo:');
+      lines.push('');
+      cart.forEach(c => {
+        lines.push('Código: ' + c.code);
+        lines.push('Peça: ' + c.name);
+        lines.push('Tamanho: ' + c.size);
+        lines.push('Quantidade: ' + c.qty);
+        lines.push('---');
+      });
+      lines.push('');
+      lines.push('(Por favor, não altere esta mensagem — os códigos ajudam a loja a localizar as peças certas.)');
+      message = lines.join('\n');
+    }
+    openWhatsapp(message);
     cartOverlay.classList.remove('open');
   };
 
@@ -3106,6 +3185,13 @@
     renderBannerColorPicker();
     renderBannerList();
     whatsappInput.value = storeWhatsapp;
+    storeNameInput.value = storeName;
+    storeInstagramInput.value = storeInstagram;
+    whatsappMsgSingleInput.value = whatsappMsgSingle;
+    whatsappMsgCartInput.value = whatsappMsgCart;
+    if(storeLogoUrl){ storeLogoPreview.src = storeLogoUrl; storeLogoPreview.style.display = 'block'; }
+    else { storeLogoPreview.style.display = 'none'; }
+    renderAdminsList();
     renderGrid();
     renderTagSections();
   }
@@ -3374,14 +3460,72 @@
     renderTagPicker();
   };
 
-  /* ---------- WHATSAPP CONFIG ---------- */
-  saveWhatsappBtn.onclick = async () => {
+  /* ---------- STORE SETTINGS ---------- */
+  storeLogoInput.onchange = async () => {
+    const file = storeLogoInput.files[0];
+    if(!file) return;
+    const url = await uploadImageFile(file, 'logo');
+    if(url){
+      storeLogoUrl = url;
+      storeLogoPreview.src = url;
+      storeLogoPreview.style.display = 'block';
+    }
+  };
+  saveStoreSettingsBtn.onclick = async () => {
     const val = whatsappInput.value.replace(/\D/g,'');
-    if(!val){ alert('Digite um número válido, apenas dígitos com DDI e DDD.'); return; }
+    if(!val){ alert('Digite um número de WhatsApp válido, apenas dígitos com DDI e DDD.'); return; }
     storeWhatsapp = val;
-    await sb.from('settings').update({ whatsapp: storeWhatsapp }).eq('id', 1);
+    storeName = storeNameInput.value.trim() || 'MW Multimarcas';
+    storeInstagram = storeInstagramInput.value.trim().replace(/^@/, '');
+    whatsappMsgSingle = whatsappMsgSingleInput.value;
+    whatsappMsgCart = whatsappMsgCartInput.value;
+    const { error } = await sb.from('settings').update({
+      whatsapp: storeWhatsapp,
+      store_name: storeName,
+      instagram: storeInstagram,
+      logo_url: storeLogoUrl,
+      whatsapp_msg_single: whatsappMsgSingle,
+      whatsapp_msg_cart: whatsappMsgCart
+    }).eq('id', 1);
+    if(error){ alert('Erro ao salvar configurações: ' + error.message); return; }
     renderFooterExtras();
-    alert('Número de WhatsApp salvo!');
+    alert('Configurações salvas!');
+  };
+
+  function renderAdminsList(){
+    adminsList.innerHTML = '';
+    if(!storeAdmins.length){
+      const current = (currentSession && currentSession.user) ? currentSession.user.email : '';
+      adminsList.innerHTML = '<div class="owner-list-item"><div class="info"><strong>' + escapeHtml(current) + '</strong><span>Administrador atual</span></div></div>';
+      return;
+    }
+    storeAdmins.forEach(a => {
+      const row = document.createElement('div');
+      row.className = 'owner-list-item';
+      const info = document.createElement('div');
+      info.className = 'info';
+      info.innerHTML = '<strong>' + escapeHtml(a.email) + '</strong><span>Administrador</span>';
+      row.appendChild(info);
+      const del = document.createElement('button');
+      del.textContent = 'Remover';
+      del.onclick = async () => {
+        if(!confirm('Remover acesso de "' + a.email + '"?')) return;
+        await sb.from('store_admins').delete().eq('id', a.id);
+        storeAdmins = storeAdmins.filter(x => x.id !== a.id);
+        renderAdminsList();
+      };
+      row.appendChild(del);
+      adminsList.appendChild(row);
+    });
+  }
+  addAdminBtn.onclick = async () => {
+    const email = prompt('Email do novo administrador (o login dele ainda precisa ser criado no Supabase — peça pro Claude fazer isso):');
+    if(!email || !email.trim()) return;
+    const clean = email.trim().toLowerCase();
+    const { data, error } = await sb.from('store_admins').insert({ email: clean }).select().single();
+    if(error){ alert('Erro ao adicionar administrador: ' + error.message); return; }
+    storeAdmins.push({ id: data.id, email: data.email });
+    renderAdminsList();
   };
 
   /* ---------- TABS ---------- */
