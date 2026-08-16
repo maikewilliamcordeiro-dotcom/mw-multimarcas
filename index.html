@@ -370,7 +370,7 @@
 
   /* Admin dashboard layout (Área do lojista) — clean light "SaaS" style, inspired by Líder Store admin */
   #overlay{ background:var(--admin-page-bg); padding:0; align-items:stretch; }
-  .admin-panel{ padding:0; width:100%; max-width:none; min-height:100vh; overflow:hidden; border-radius:0; background:var(--admin-page-bg); }
+  .admin-panel{ padding:0; width:100%; max-width:none; min-height:100vh; max-height:100vh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; border-radius:0; background:var(--admin-page-bg); }
   .admin-panel .close-x{ z-index:6; color:var(--muted); }
   .admin-layout{ display:flex; flex-direction:column; min-height:100vh; }
 
@@ -1324,6 +1324,21 @@
     document.addEventListener('DOMContentLoaded', __showSetPasswordOverlay);
     if(document.readyState !== 'loading') __showSetPasswordOverlay();
   }
+
+  // Trava o scroll da página por trás sempre que algum overlay/modal (carrinho, peça,
+  // login, painel admin, etc.) estiver aberto. Sem isso a página de fundo continua
+  // rolando escondida atrás do modal — dá a impressão de que a barra de rolagem
+  // "sobe e desce" sozinha enquanto os itens na tela ficam parados.
+  (function setupOverlayScrollLock(){
+    function updateBodyScrollLock(){
+      const anyOpen = document.querySelector('.overlay.open');
+      document.body.style.overflow = anyOpen ? 'hidden' : '';
+    }
+    document.querySelectorAll('.overlay').forEach(ov => {
+      new MutationObserver(updateBodyScrollLock).observe(ov, { attributes: true, attributeFilter: ['class'] });
+    });
+    updateBodyScrollLock();
+  })();
 
   const STORAGE_BUCKET = 'product-images';
   const CART_KEY = 'vitrine_cart_v1';
