@@ -652,10 +652,10 @@
   /* Quadradinhos de categorias (abaixo do banner) */
   .promo-cat-wrap{ max-width:1100px; margin:22px auto 0; padding:0 20px; }
   .promo-cat-grid{
-    display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
+    display:grid; grid-template-columns:repeat(6,1fr); gap:8px;
   }
   .promo-cat-tile{
-    position:relative; aspect-ratio:1/1; border-radius:12px; overflow:hidden; cursor:pointer;
+    position:relative; aspect-ratio:1/1; border-radius:10px; overflow:hidden; cursor:pointer;
     background:var(--black); border:1px solid var(--border);
     display:flex; align-items:flex-end; justify-content:center;
     box-shadow:0 4px 14px rgba(0,0,0,.12); transition:transform .15s;
@@ -671,13 +671,13 @@
     background:linear-gradient(0deg, rgba(0,0,0,.75) 0%, rgba(0,0,0,.15) 65%, rgba(0,0,0,.05) 100%);
   }
   .promo-cat-tile-label{
-    position:relative; z-index:1; color:#fff; font-size:12px; font-weight:800;
-    text-transform:uppercase; letter-spacing:.4px; text-align:center; padding:10px 8px;
-    line-height:1.25;
+    position:relative; z-index:1; color:#fff; font-size:10px; font-weight:800;
+    text-transform:uppercase; letter-spacing:.3px; text-align:center; padding:7px 5px;
+    line-height:1.2;
   }
   @media (max-width:680px){
-    .promo-cat-grid{ grid-template-columns:repeat(3,1fr); gap:8px; }
-    .promo-cat-tile-label{ font-size:10.5px; padding:8px 5px; }
+    .promo-cat-grid{ grid-template-columns:repeat(4,1fr); gap:6px; }
+    .promo-cat-tile-label{ font-size:9px; padding:6px 4px; }
   }
 
   /* Grade de categorias */
