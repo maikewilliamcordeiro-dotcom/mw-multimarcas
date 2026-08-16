@@ -1080,13 +1080,13 @@
 
       <div class="field">
         <label>Mensagem do WhatsApp — "Comprar" (produto único)</label>
-        <textarea id="whatsappMsgSingleInput" rows="5" placeholder="Olá! Quero comprar esta peça: {peca} ({codigo}) - Tamanho: {tamanho} - {preco}"></textarea>
-        <div class="hint" style="margin-top:4px;">Use: {codigo} {peca} {tamanho} {quantidade} {preco}</div>
+        <textarea id="whatsappMsgSingleInput" rows="5" placeholder="Olá! Quero comprar esta peça: {nome} (Código {codigo}) - Tamanho: {tamanho} - R$ {preco}"></textarea>
+        <div class="hint" style="margin-top:4px;">Use: {nome} {codigo} {tamanho} {quantidade} {preco} — escreva "R$" antes de {preco} se quiser o símbolo (o campo já traz só o número).</div>
       </div>
       <div class="field">
         <label>Mensagem do WhatsApp — Carrinho</label>
-        <textarea id="whatsappMsgCartInput" rows="5" placeholder="Olá! Quero comprar as peças abaixo na {loja}: {itens}"></textarea>
-        <div class="hint" style="margin-top:4px;">Use: {loja} {itens} — {itens} é substituído pela lista de peças do carrinho.</div>
+        <textarea id="whatsappMsgCartInput" rows="5" placeholder="Olá! Quero comprar as peças abaixo na {loja}:&#10;&#10;{itens}&#10;&#10;Total: R$ {total}"></textarea>
+        <div class="hint" style="margin-top:4px;">Use: {loja} {itens} {total} — {itens} vira automaticamente a lista de peças do carrinho (nome, código, tamanho e preço de cada uma).</div>
       </div>
 
       <div class="panel-actions">
@@ -2534,7 +2534,8 @@
         code: activeModalItem.code,
         name: activeModalItem.name,
         size: modalSelectedSize,
-        qty: modalQty
+        qty: modalQty,
+        price: activeModalItem.price
       });
     }
     saveCart();
@@ -2548,10 +2549,31 @@
     }
   };
 
+  function normalizePlaceholderKey(s){
+    return s.normalize('NFD').replace(new RegExp('[̀-ͯ]', 'g'), '').toLowerCase().trim();
+  }
+  const PLACEHOLDER_ALIASES = {
+    nome: ['nome', 'peca', 'produto', 'nome da peca'],
+    codigo: ['codigo', 'cod'],
+    tamanho: ['tamanho', 'tam'],
+    preco: ['preco', 'valor'],
+    quantidade: ['quantidade', 'qtd', 'qtde'],
+    loja: ['loja', 'nome da loja'],
+    itens: ['itens', 'pecas', 'produtos', 'lista'],
+    total: ['total', 'valor total']
+  };
+  // Replaces {placeholder} tokens in a template. Matching ignores accents/case, so
+  // {Código}, {codigo} and {Cód} all resolve to vars.codigo, etc.
   function fillTemplate(tpl, vars){
-    let out = tpl;
-    Object.keys(vars).forEach(k => { out = out.split('{' + k + '}').join(vars[k]); });
-    return out;
+    return tpl.replace(/\{([^}]+)\}/g, (match, rawKey) => {
+      const norm = normalizePlaceholderKey(rawKey);
+      for(const canon in PLACEHOLDER_ALIASES){
+        if(PLACEHOLDER_ALIASES[canon].includes(norm) && vars[canon] !== undefined){
+          return String(vars[canon]);
+        }
+      }
+      return match;
+    });
   }
 
   buyNowBtn.onclick = () => {
@@ -2561,11 +2583,12 @@
       return;
     }
     const precoTxt = (activeModalItem.price != null) ? formatPrice(activeModalItem.price) : '';
+    const precoPlain = (activeModalItem.price != null) ? Number(activeModalItem.price).toFixed(2).replace('.', ',') : '';
     let message;
     if(whatsappMsgSingle && whatsappMsgSingle.trim()){
       message = fillTemplate(whatsappMsgSingle, {
-        codigo: activeModalItem.code, peca: activeModalItem.name, tamanho: modalSelectedSize,
-        quantidade: String(modalQty), preco: precoTxt
+        codigo: activeModalItem.code, nome: activeModalItem.name, tamanho: modalSelectedSize,
+        quantidade: String(modalQty), preco: precoPlain
       });
     } else {
       const lines = [];
@@ -2644,8 +2667,14 @@
     }
     let message;
     if(whatsappMsgCart && whatsappMsgCart.trim()){
-      const itensTxt = cart.map(c => 'Código: ' + c.code + '\nPeça: ' + c.name + '\nTamanho: ' + c.size + '\nQuantidade: ' + c.qty).join('\n---\n');
-      message = fillTemplate(whatsappMsgCart, { loja: storeName, itens: itensTxt });
+      const itensTxt = cart.map(c => {
+        let line = '🛍️ ' + c.name + ' — Código: ' + c.code + ' — Tamanho: ' + c.size + ' — Qtd: ' + c.qty;
+        if(c.price != null) line += ' — R$ ' + formatPrice(c.price).replace('R$ ', '');
+        return line;
+      }).join('\n');
+      const totalNum = cart.reduce((sum, c) => sum + ((c.price != null ? Number(c.price) : 0) * c.qty), 0);
+      const totalPlain = totalNum.toFixed(2).replace('.', ',');
+      message = fillTemplate(whatsappMsgCart, { loja: storeName, itens: itensTxt, total: totalPlain });
     } else {
       const lines = [];
       lines.push('Olá! Quero comprar as peças abaixo:');
