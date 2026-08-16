@@ -1141,6 +1141,26 @@
   </div>
 </div>
 
+<div class="overlay admin-scope" id="setPasswordOverlay">
+  <div class="panel" style="max-width:340px;">
+    <h2>Definir sua senha</h2>
+    <p class="hint" style="margin-bottom:14px;">Escolha a senha que você vai usar pra entrar na área do lojista.</p>
+    <div class="field">
+      <label>Nova senha</label>
+      <input type="password" id="newPasswordInput" placeholder="Nova senha" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label>Confirmar senha</label>
+      <input type="password" id="confirmPasswordInput" placeholder="Repita a nova senha" autocomplete="new-password">
+    </div>
+    <p class="hint" id="setPasswordError" style="display:none; color:var(--red);"></p>
+    <p class="hint" id="setPasswordSuccess" style="display:none; color:#1a8a4a;">Senha definida! Entrando...</p>
+    <div class="panel-actions">
+      <button class="btn btn-primary btn-block" id="setPasswordSubmit">Salvar senha</button>
+    </div>
+  </div>
+</div>
+
 <!-- Item Form Overlay (Novo/Editar produto) -->
 <div class="overlay admin-scope" id="itemFormOverlay">
   <div class="panel item-form-panel">
@@ -1584,6 +1604,38 @@
   const adminLoginSubmit = document.getElementById('adminLoginSubmit');
   const adminLoginError = document.getElementById('adminLoginError');
   const adminSignOutBtn = document.getElementById('adminSignOutBtn');
+  const setPasswordOverlay = document.getElementById('setPasswordOverlay');
+  const newPasswordInput = document.getElementById('newPasswordInput');
+  const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+  const setPasswordSubmit = document.getElementById('setPasswordSubmit');
+  const setPasswordError = document.getElementById('setPasswordError');
+  const setPasswordSuccess = document.getElementById('setPasswordSuccess');
+
+  async function trySetPassword(){
+    const p1 = newPasswordInput.value;
+    const p2 = confirmPasswordInput.value;
+    setPasswordError.style.display = 'none';
+    setPasswordSuccess.style.display = 'none';
+    if(!p1 || p1.length < 6){ setPasswordError.textContent = 'A senha precisa ter pelo menos 6 caracteres.'; setPasswordError.style.display = 'block'; return; }
+    if(p1 !== p2){ setPasswordError.textContent = 'As senhas não são iguais.'; setPasswordError.style.display = 'block'; return; }
+    setPasswordSubmit.disabled = true;
+    const { error } = await sb.auth.updateUser({ password: p1 });
+    setPasswordSubmit.disabled = false;
+    if(error){
+      setPasswordError.textContent = 'Erro ao salvar senha: ' + error.message;
+      setPasswordError.style.display = 'block';
+      return;
+    }
+    setPasswordSuccess.style.display = 'block';
+    setTimeout(() => {
+      setPasswordOverlay.classList.remove('open');
+      newPasswordInput.value = '';
+      confirmPasswordInput.value = '';
+      openPanel();
+    }, 1200);
+  }
+  setPasswordSubmit.onclick = trySetPassword;
+  confirmPasswordInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') trySetPassword(); });
 
   /* Clicar na logo sempre volta pro painel principal da loja (limpa filtro e sobe ao topo) */
   const brandLogoImgWrap = document.querySelector('.brand-logo-wrap');
@@ -3478,6 +3530,14 @@
 
   sb.auth.onAuthStateChange((event, session) => {
     currentSession = session;
+    if(event === 'PASSWORD_RECOVERY'){
+      setPasswordError.style.display = 'none';
+      setPasswordSuccess.style.display = 'none';
+      newPasswordInput.value = '';
+      confirmPasswordInput.value = '';
+      setPasswordOverlay.classList.add('open');
+      return;
+    }
     if(!session && ownerMode){
       closePanelFn();
     }
