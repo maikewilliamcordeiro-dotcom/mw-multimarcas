@@ -1459,9 +1459,39 @@
   let currentSession = null;
   let stockLog = [];
 
+  // Comprime/redimensiona a imagem no navegador antes de enviar, pra não subir fotos de
+  // 2-3MB (comum em imagem gerada por IA) direto pra loja — isso é o que deixa o site
+  // pesado e lento pra carregar no celular. Reduz pro tamanho máximo de exibição (1600px)
+  // e converte pra JPEG, sem perda visível de qualidade nas fotos de produto.
+  async function compressImageFile(file, maxDim, quality){
+    maxDim = maxDim || 1600;
+    quality = quality || 0.82;
+    if(!file || !file.type || !file.type.startsWith('image/')) return file;
+    try{
+      const bitmap = await createImageBitmap(file);
+      let { width, height } = bitmap;
+      if(width > maxDim || height > maxDim){
+        const scale = maxDim / Math.max(width, height);
+        width = Math.max(1, Math.round(width * scale));
+        height = Math.max(1, Math.round(height * scale));
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bitmap, 0, 0, width, height);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+      if(!blob || blob.size >= file.size) return file; // não piora se já era pequena
+      const newName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+      return new File([blob], newName, { type: 'image/jpeg' });
+    }catch(e){
+      return file; // se o navegador não suportar, sobe o arquivo original mesmo
+    }
+  }
+
   async function uploadImageFile(file, folder){
-    const path = folder + '/' + Date.now() + '-' + uid() + '-' + file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-    const { error } = await sb.storage.from(STORAGE_BUCKET).upload(path, file, { cacheControl: '3600', upsert: false });
+    const toUpload = await compressImageFile(file);
+    const path = folder + '/' + Date.now() + '-' + uid() + '-' + toUpload.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const { error } = await sb.storage.from(STORAGE_BUCKET).upload(path, toUpload, { cacheControl: '3600', upsert: false });
     if(error){ alert('Erro ao enviar imagem: ' + error.message); return null; }
     const { data } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
     return data.publicUrl;
@@ -1911,6 +1941,8 @@
 
     if(it.image){
       const img = document.createElement('img');
+      img.loading = 'lazy';
+      img.decoding = 'async';
       img.src = it.image;
       img.alt = it.name;
       imgWrap.appendChild(img);
