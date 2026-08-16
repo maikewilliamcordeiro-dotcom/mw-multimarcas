@@ -431,6 +431,13 @@
   .add-size-row button{
     border:1px solid var(--border); background:#f4f0ea; border-radius:8px; padding:0 12px; cursor:pointer; font-size:13px;
   }
+  .size-stock-editor{ display:flex; flex-direction:column; gap:8px; }
+  .size-stock-row{ display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:8px; padding:7px 10px; }
+  .size-stock-row .sz-label{ font-weight:700; font-size:13px; width:44px; flex-shrink:0; }
+  .size-stock-row .sz-stepper{ display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .size-stock-row .sz-stepper button{ width:26px; height:26px; border-radius:6px; border:1px solid var(--border); background:#fff; cursor:pointer; font-size:14px; line-height:1; }
+  .size-stock-row .sz-stepper input{ width:52px; text-align:center; padding:5px 4px; border:1px solid var(--border); border-radius:6px; font-size:14px; }
+  .size-stock-editor-empty{ font-size:12px; color:var(--muted); }
   .color-picker{ display:flex; flex-wrap:wrap; gap:8px; }
   .color-swatch{ width:34px; height:34px; border-radius:8px; cursor:pointer; border:2px solid transparent; }
   .color-swatch.sel{ border-color:var(--black); }
@@ -1192,9 +1199,10 @@
       </div>
     </div>
     <div class="field">
-      <label id="stockInputLabel">Estoque inicial</label>
-      <input type="number" id="stockInput" min="0" placeholder="Ex: 3" value="1">
-      <div class="hint" id="stockEditHint" style="display:none;">Para ajustar o estoque de uma peça já cadastrada, use os botões +/- na lista.</div>
+      <label id="stockInputLabel">Estoque por tamanho</label>
+      <div class="size-stock-editor" id="sizeStockEditor"></div>
+      <div class="hint" style="margin-top:6px;">Cada tamanho tem seu próprio estoque. Dê baixa (&minus;) quando vender e reponha (+) quando repor a peça.</div>
+      <input type="hidden" id="stockInput" value="0">
     </div>
     <div class="field">
       <label>Coleções (opcional)</label>
@@ -1339,7 +1347,7 @@
 
   function dbToItem(r){
     return { id: r.id, code: r.code, name: r.name, category: r.category || '', description: r.description || '',
-      sizes: r.sizes || [], stock: r.stock || 0, tags: r.tags || [], image: r.image_url || null,
+      sizes: r.sizes || [], stock: r.stock || 0, stockBySize: r.stock_by_size || {}, tags: r.tags || [], image: r.image_url || null,
       price: (r.price === undefined || r.price === null) ? null : Number(r.price),
       oldPrice: (r.old_price === undefined || r.old_price === null) ? null : Number(r.old_price) };
   }
@@ -1868,6 +1876,7 @@
   let activeCatFilter = 'Todas';
   let selectedSizesForNewItem = [];
   let selectedTagsForNewItem = [];
+  let sizeStockForNewItem = {}; // { [size]: quantity }
   let pendingImageDataUrl = null;
   let editingItemId = null;
   let editingBannerId = null;
@@ -1929,7 +1938,7 @@
   const itemFormTitle = document.getElementById('itemFormTitle');
   const editModeBanner = document.getElementById('editModeBanner');
   const cancelEditItemBtn = document.getElementById('cancelEditItemBtn');
-  const stockEditHint = document.getElementById('stockEditHint');
+  const sizeStockEditor = document.getElementById('sizeStockEditor');
 
   const catBtn = document.getElementById('catBtn');
   const catBtnLabel = document.getElementById('catBtnLabel');
@@ -2120,6 +2129,17 @@
     return Array.from(s);
   }
   function itemStock(it){ return (it.stock === undefined || it.stock === null) ? 1 : it.stock; }
+  // Estoque de um tamanho específico. Se a peça ainda não tem o estoque dividido por
+  // tamanho (stockBySize vazio), cai no estoque total como fallback pra não quebrar peças antigas.
+  function sizeStock(it, sz){
+    const bySize = it.stockBySize || {};
+    if(Object.prototype.hasOwnProperty.call(bySize, sz)) return Number(bySize[sz]) || 0;
+    return itemStock(it);
+  }
+  function isSizeDisabled(it, sz){
+    const bySize = it.stockBySize || {};
+    return Object.prototype.hasOwnProperty.call(bySize, sz) && Number(bySize[sz]) <= 0;
+  }
 
   async function removeProductFromStore(it){
     if(itemStock(it) > 0) await logStockMovement(it.id, it.name, -itemStock(it), 'saida');
@@ -2252,8 +2272,8 @@
     sizesWrap.className = 'sizes';
     (it.sizes||[]).forEach(sz => {
       const tag = document.createElement('span');
-      tag.className = 'size-tag' + ((it.disabledSizes||[]).includes(sz) ? ' disabled' : '');
-      tag.textContent = sz;
+      tag.className = 'size-tag' + ((isSizeDisabled(it, sz) || (it.disabledSizes||[]).includes(sz)) ? ' disabled' : '');
+      tag.textContent = sz + (Object.prototype.hasOwnProperty.call(it.stockBySize||{}, sz) ? (' (' + it.stockBySize[sz] + ')') : '');
       sizesWrap.appendChild(tag);
     });
     body.appendChild(sizesWrap);
@@ -2444,7 +2464,7 @@
   /* ---------- ITEM DETAIL MODAL ---------- */
   function openItemModal(it){
     activeModalItem = it;
-    modalSelectedSize = (it.sizes && it.sizes.find(sz => !(it.disabledSizes||[]).includes(sz))) || null;
+    modalSelectedSize = (it.sizes && it.sizes.find(sz => !isSizeDisabled(it, sz) && !(it.disabledSizes||[]).includes(sz))) || null;
     modalQty = 1;
     itemModalCat.textContent = it.category || '';
     itemModalName.textContent = it.name;
@@ -2502,19 +2522,19 @@
     (activeModalItem.sizes || []).forEach(sz => {
       const span = document.createElement('span');
       span.textContent = sz;
-      const isDisabled = (activeModalItem.disabledSizes||[]).includes(sz);
+      const isDisabled = isSizeDisabled(activeModalItem, sz) || (activeModalItem.disabledSizes||[]).includes(sz);
       if(isDisabled){
         span.classList.add('disabled');
       } else {
         if(modalSelectedSize === sz) span.classList.add('sel');
-        span.onclick = () => { modalSelectedSize = sz; renderItemModalSizes(); };
+        span.onclick = () => { modalSelectedSize = sz; modalQty = 1; qtyValue.textContent = modalQty; renderItemModalSizes(); };
       }
       itemModalSizes.appendChild(span);
     });
   }
   qtyMinus.onclick = () => { modalQty = Math.max(1, modalQty - 1); qtyValue.textContent = modalQty; };
   qtyPlus.onclick = () => {
-    const stock = itemStock(activeModalItem);
+    const stock = modalSelectedSize ? sizeStock(activeModalItem, modalSelectedSize) : itemStock(activeModalItem);
     if(stock > 0 && modalQty >= stock){ return; }
     modalQty = modalQty + 1;
     qtyValue.textContent = modalQty;
@@ -2609,7 +2629,15 @@
 
   function openWhatsapp(message){
     const url = 'https://wa.me/' + storeWhatsapp.replace(/\D/g,'') + '?text=' + encodeURIComponent(message);
-    window.open(url, '_blank');
+    // Usar um <a target="_blank"> real em vez de window.open(): navegadores (principalmente no
+    // celular) costumam bloquear window.open() silenciosamente, sem nenhum aviso pro usuário.
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   /* ---------- CART ---------- */
@@ -2926,6 +2954,58 @@
       };
       sizePicker.appendChild(span);
     });
+    renderSizeStockEditor();
+  }
+
+  function renderSizeStockEditor(){
+    sizeStockEditor.innerHTML = '';
+    // Limpa entradas de tamanhos que foram desmarcados
+    Object.keys(sizeStockForNewItem).forEach(sz => {
+      if(!selectedSizesForNewItem.includes(sz)) delete sizeStockForNewItem[sz];
+    });
+    if(!selectedSizesForNewItem.length){
+      sizeStockEditor.innerHTML = '<div class="size-stock-editor-empty">Selecione ao menos um tamanho acima para definir o estoque.</div>';
+      return;
+    }
+    selectedSizesForNewItem.forEach(sz => {
+      if(sizeStockForNewItem[sz] === undefined) sizeStockForNewItem[sz] = 1;
+      const row = document.createElement('div');
+      row.className = 'size-stock-row';
+      const label = document.createElement('span');
+      label.className = 'sz-label';
+      label.textContent = sz;
+      row.appendChild(label);
+      const stepper = document.createElement('div');
+      stepper.className = 'sz-stepper';
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = '0';
+      input.value = sizeStockForNewItem[sz];
+      const minus = document.createElement('button');
+      minus.type = 'button';
+      minus.textContent = '−';
+      minus.onclick = () => {
+        sizeStockForNewItem[sz] = Math.max(0, (sizeStockForNewItem[sz]||0) - 1);
+        input.value = sizeStockForNewItem[sz];
+      };
+      input.oninput = () => {
+        let v = parseInt(input.value, 10);
+        if(isNaN(v) || v < 0) v = 0;
+        sizeStockForNewItem[sz] = v;
+      };
+      const plus = document.createElement('button');
+      plus.type = 'button';
+      plus.textContent = '+';
+      plus.onclick = () => {
+        sizeStockForNewItem[sz] = (sizeStockForNewItem[sz]||0) + 1;
+        input.value = sizeStockForNewItem[sz];
+      };
+      stepper.appendChild(minus);
+      stepper.appendChild(input);
+      stepper.appendChild(plus);
+      row.appendChild(stepper);
+      sizeStockEditor.appendChild(row);
+    });
   }
 
   function renderTagPicker(){
@@ -3160,12 +3240,11 @@
     imgInput.value = '';
     priceInput.value = '';
     oldPriceInput.value = '';
-    stockInput.value = '1';
-    stockInput.disabled = false;
-    stockEditHint.style.display = 'none';
+    stockInput.value = '0';
     pendingImageDataUrl = null;
     selectedSizesForNewItem = [];
     selectedTagsForNewItem = [];
+    sizeStockForNewItem = {};
     editingItemId = null;
     itemFormTitle.textContent = 'Adicionar peça';
     editModeBanner.style.display = 'none';
@@ -3186,9 +3265,24 @@
     pendingImageDataUrl = it.image || null;
     selectedSizesForNewItem = (it.sizes || []).slice();
     selectedTagsForNewItem = (it.tags || []).slice();
+    // Preenche o estoque por tamanho a partir do que já foi salvo; para peças antigas que
+    // ainda não têm a divisão por tamanho, distribui o estoque total igualmente como ponto
+    // de partida — ajuste os números pra refletir a realidade de cada tamanho.
+    const bySize = Object.assign({}, it.stockBySize || {});
+    const sizesNeedingDefault = (it.sizes || []).filter(sz => !Object.prototype.hasOwnProperty.call(bySize, sz));
+    if(sizesNeedingDefault.length){
+      let knownSum = 0;
+      (it.sizes || []).forEach(sz => { if(Object.prototype.hasOwnProperty.call(bySize, sz)) knownSum += Number(bySize[sz]) || 0; });
+      const remaining = Math.max(0, itemStock(it) - knownSum);
+      const base = Math.floor(remaining / sizesNeedingDefault.length);
+      let extra = remaining - base * sizesNeedingDefault.length;
+      sizesNeedingDefault.forEach(sz => {
+        bySize[sz] = base + (extra > 0 ? 1 : 0);
+        if(extra > 0) extra--;
+      });
+    }
+    sizeStockForNewItem = bySize;
     stockInput.value = itemStock(it);
-    stockInput.disabled = true;
-    stockEditHint.style.display = 'block';
     itemFormTitle.textContent = 'Editar peça';
     editModeBanner.style.display = 'flex';
     saveItem.textContent = 'Salvar alterações';
@@ -3290,14 +3384,27 @@
     const priceVal = priceInput.value.trim() === '' ? null : parseFloat(priceInput.value);
     const oldPriceVal = oldPriceInput.value.trim() === '' ? null : parseFloat(oldPriceInput.value);
 
+    // Monta o estoque por tamanho só com os tamanhos selecionados, e soma pra ter o total.
+    const stockBySizeObj = {};
+    let totalStock = 0;
+    selectedSizesForNewItem.forEach(sz => {
+      const v = Math.max(0, parseInt(sizeStockForNewItem[sz], 10) || 0);
+      stockBySizeObj[sz] = v;
+      totalStock += v;
+    });
+
     if(editingItemId){
       saveItem.disabled = true;
+      const prevItem = items.find(i => i.id === editingItemId);
+      const prevTotal = prevItem ? itemStock(prevItem) : 0;
       const { data, error } = await sb.from('products').update({
         name: name,
         category: catInput.value.trim(),
         description: descInput.value.trim(),
         image_url: pendingImageDataUrl,
         sizes: selectedSizesForNewItem.slice(),
+        stock: totalStock,
+        stock_by_size: stockBySizeObj,
         tags: selectedTagsForNewItem.slice(),
         price: priceVal,
         old_price: oldPriceVal
@@ -3306,6 +3413,8 @@
       if(error){
         if(String(error.message||'').includes('old_price') || String(error.message||'').includes('price')){
           alert('Erro ao salvar: o campo de preço ainda não existe no seu banco de dados. Peça pro Claude te passar o comando SQL pra adicionar as colunas price/old_price na tabela products.');
+        } else if(String(error.message||'').includes('stock_by_size')){
+          alert('Erro ao salvar: o campo de estoque por tamanho ainda não existe no seu banco de dados. Peça pro Claude adicionar a coluna stock_by_size na tabela products.');
         } else {
           alert('Erro ao salvar alterações: ' + error.message);
         }
@@ -3314,6 +3423,8 @@
       const updated = dbToItem(data);
       const idx = items.findIndex(i => i.id === editingItemId);
       if(idx > -1) items[idx] = updated;
+      const delta = totalStock - prevTotal;
+      if(delta !== 0) await logStockMovement(editingItemId, name, delta, delta > 0 ? 'entrada' : 'saida');
       resetForm();
       renderCatOptions();
       renderOwnerList();
@@ -3323,8 +3434,6 @@
       return;
     }
 
-    let stock = parseInt(stockInput.value, 10);
-    if(isNaN(stock) || stock < 0) stock = 0;
     saveItem.disabled = true;
     const code = await nextCode();
     const { data, error } = await sb.from('products').insert({
@@ -3334,7 +3443,8 @@
       description: descInput.value.trim(),
       image_url: pendingImageDataUrl,
       sizes: selectedSizesForNewItem.slice(),
-      stock: stock,
+      stock: totalStock,
+      stock_by_size: stockBySizeObj,
       tags: selectedTagsForNewItem.slice(),
       price: priceVal,
       old_price: oldPriceVal
@@ -3343,6 +3453,8 @@
     if(error){
       if(String(error.message||'').includes('old_price') || String(error.message||'').includes('price')){
         alert('Erro ao salvar: o campo de preço ainda não existe no seu banco de dados. Peça pro Claude te passar o comando SQL pra adicionar as colunas price/old_price na tabela products.');
+      } else if(String(error.message||'').includes('stock_by_size')){
+        alert('Erro ao salvar: o campo de estoque por tamanho ainda não existe no seu banco de dados. Peça pro Claude adicionar a coluna stock_by_size na tabela products.');
       } else {
         alert('Erro ao salvar peça: ' + error.message);
       }
@@ -3350,7 +3462,7 @@
     }
     const newItem = dbToItem(data);
     items.unshift(newItem);
-    if(stock > 0) await logStockMovement(newItem.id, newItem.name, stock, 'entrada');
+    if(totalStock > 0) await logStockMovement(newItem.id, newItem.name, totalStock, 'entrada');
     resetForm();
     renderCatOptions();
     renderOwnerList();
