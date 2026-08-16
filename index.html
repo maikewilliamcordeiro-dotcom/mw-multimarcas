@@ -1303,6 +1303,24 @@
   const SUPABASE_URL = 'https://nryhlxzltswavfqgsaez.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yeWhseHpsdHN3YXZmcWdzYWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MjQ5MzMsImV4cCI6MjEwMjQwMDkzM30.-RbzVd8r3zuff1vvipgRvvJBU6sZ2ffSDJLDatTpeBU';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Registra o listener de recuperação de senha IMEDIATAMENTE após criar o client,
+  // antes de qualquer outro código rodar, pra não perder o evento PASSWORD_RECOVERY
+  // por causa de alguma corrida com o restante da inicialização da página.
+  function __showSetPasswordOverlay(){
+    const ov = document.getElementById('setPasswordOverlay');
+    if(ov) ov.classList.add('open');
+  }
+  sb.auth.onAuthStateChange((event) => {
+    if(event === 'PASSWORD_RECOVERY') __showSetPasswordOverlay();
+  });
+  // Fallback: se o link trouxe indícios de recuperação de senha na URL (hash ou
+  // querystring), mostra a tela na hora, sem depender do evento do Supabase.
+  if(location.hash.includes('type=recovery') || /[?&]type=recovery/.test(location.search) || /[?&]code=/.test(location.search)){
+    document.addEventListener('DOMContentLoaded', __showSetPasswordOverlay);
+    if(document.readyState !== 'loading') __showSetPasswordOverlay();
+  }
+
   const STORAGE_BUCKET = 'product-images';
   const CART_KEY = 'vitrine_cart_v1';
   const DEFAULT_SIZES = ['PP','P','M','G','GG','XG'];
