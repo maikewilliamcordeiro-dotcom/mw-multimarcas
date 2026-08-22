@@ -675,9 +675,16 @@
     text-transform:uppercase; letter-spacing:.3px; text-align:center; padding:7px 5px;
     line-height:1.2;
   }
+  .promo-cat-badge{
+    position:absolute; top:5px; right:5px; z-index:2;
+    background:#e0293e; color:#fff; font-size:8px; font-weight:800;
+    text-transform:uppercase; letter-spacing:.3px; padding:3px 6px; border-radius:5px;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+  }
   @media (max-width:680px){
     .promo-cat-grid{ grid-template-columns:repeat(4,1fr); gap:6px; }
     .promo-cat-tile-label{ font-size:9px; padding:6px 4px; }
+    .promo-cat-badge{ font-size:7px; padding:2px 5px; top:4px; right:4px; }
   }
 
   /* Grade de categorias */
@@ -2078,6 +2085,7 @@
     'Coyote',
     'Bermudas Promoção',
     'Conjuntos',
+    'Conjunto Infantil',
     'Acessórios',
     'Blusa Manga Longa',
     'Calças'
@@ -2099,6 +2107,12 @@
         bg.className = 'tile-bg';
         bg.style.backgroundImage = 'url(' + photoUrl + ')';
         tile.appendChild(bg);
+      }
+      if(cat === 'Conjunto Infantil'){
+        const badge = document.createElement('div');
+        badge.className = 'promo-cat-badge';
+        badge.textContent = 'Novidades';
+        tile.appendChild(badge);
       }
       const label = document.createElement('div');
       label.className = 'promo-cat-tile-label';
