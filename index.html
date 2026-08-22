@@ -1418,7 +1418,8 @@
       titleHtml: 'PROMOÇÃO NOS<br><span>CONJUNTOS DRI-FIT</span>',
       priceHtml: '<span class="hero-price-old">R$ 199,90</span> por <strong>R$ 99,90</strong>',
       ctaCategory: 'Conjuntos',
-      slides: HERO_SLIDES
+      slides: HERO_SLIDES,
+      cycleMs: 8000
     },
     {
       tag: 'Novidades',
@@ -1426,7 +1427,8 @@
       titleHtml: 'CHEGOU O<br><span>CONJUNTO INFANTIL</span>',
       priceHtml: '<strong>R$ 69,90</strong>',
       ctaCategory: 'Conjunto Infantil',
-      slides: HERO_INFANTIL_SLIDES
+      slides: HERO_INFANTIL_SLIDES,
+      cycleMs: 16000
     }
   ];
 
@@ -1436,10 +1438,14 @@
     const photoCont = document.getElementById('heroPhotoSlides');
     if(photoCont){
       photoCont.innerHTML = '';
-      promo.slides.forEach(src => {
+      const n = promo.slides.length;
+      const cycle = promo.cycleMs || 16000;
+      promo.slides.forEach((src, i) => {
         const div = document.createElement('div');
         div.className = 'hero-slide';
         div.style.backgroundImage = 'url(' + src + ')';
+        div.style.animationDuration = cycle + 'ms';
+        div.style.animationDelay = (i * (cycle / n)) + 'ms';
         photoCont.appendChild(div);
       });
     }
@@ -1470,10 +1476,15 @@
   }
   paintHeroPromo(0);
   if(HERO_PROMOS.length > 1){
-    setInterval(() => {
-      heroPromoIndex = (heroPromoIndex + 1) % HERO_PROMOS.length;
-      renderHeroPromo(heroPromoIndex);
-    }, 16000);
+    function scheduleNextHeroPromo(){
+      const currentCycle = HERO_PROMOS[heroPromoIndex].cycleMs || 16000;
+      setTimeout(() => {
+        heroPromoIndex = (heroPromoIndex + 1) % HERO_PROMOS.length;
+        renderHeroPromo(heroPromoIndex);
+        scheduleNextHeroPromo();
+      }, currentCycle);
+    }
+    scheduleNextHeroPromo();
   }
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
