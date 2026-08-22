@@ -285,7 +285,10 @@
   .filter-option.active{ background:var(--red); border-color:var(--red); color:#fff; }
   .owner-btn{ border:none; background:none; color:var(--muted); font-size:13px; cursor:pointer; text-decoration:underline; padding:6px 4px; }
 
-  main{ max-width:1100px; margin:22px auto 90px; padding:0 20px; }
+  /* "Todos os produtos" escondido a pedido — os produtos já aparecem organizados por categoria
+     logo acima (categoryCarouselsWrap), então essa lista geral só deixava o site mais comprido.
+     Continua funcionando por baixo dos panos; é só apagar "display:none" pra reativar. */
+  main{ display:none; max-width:1100px; margin:22px auto 90px; padding:0 20px; }
   .section-title{
     font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--muted);
     margin:0 0 14px; display:flex; align-items:center; gap:8px;
@@ -2200,6 +2203,11 @@
   }
 
   /* ---------- CATEGORY CAROUSELS ("ver todos" por categoria) ---------- */
+  function catSlug(cat){
+    return 'cat-section-' + (cat||'').toString().toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g,'')
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  }
   function renderCategoryCarousels(){
     const wrap = document.getElementById('categoryCarouselsWrap');
     if(!wrap) return;
@@ -2209,16 +2217,12 @@
       if(!catItems.length) return;
       const section = document.createElement('div');
       section.className = 'cat-carousel-section';
+      section.id = catSlug(cat);
       const head = document.createElement('div');
       head.className = 'cat-carousel-head';
       const h2 = document.createElement('h2');
       h2.textContent = cat;
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = 'Ver todos →';
-      btn.onclick = () => goToCategory(cat);
       head.appendChild(h2);
-      head.appendChild(btn);
       section.appendChild(head);
       const row = document.createElement('div');
       row.className = 'cat-carousel-row';
@@ -2233,8 +2237,13 @@
     renderCatOptions();
     renderGrid();
     updateFilterLabels();
-    const mainEl = document.querySelector('main');
-    if(mainEl) mainEl.scrollIntoView({ behavior:'smooth' });
+    const section = document.getElementById(catSlug(cat));
+    if(section){
+      section.scrollIntoView({ behavior:'smooth', block:'start' });
+    } else {
+      const wrap = document.getElementById('categoryCarouselsWrap');
+      if(wrap) wrap.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
   }
 
   /* ---------- FOOTER (categorias + WhatsApp) ---------- */
