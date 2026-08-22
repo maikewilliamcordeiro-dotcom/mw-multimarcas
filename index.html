@@ -659,39 +659,36 @@
   /* Quadradinhos de categorias (abaixo do banner) */
   .promo-cat-wrap{ max-width:1100px; margin:22px auto 0; padding:0 20px; }
   .promo-cat-grid{
-    display:grid; grid-template-columns:repeat(6,1fr); gap:8px;
+    display:grid; grid-template-columns:repeat(6,1fr); gap:14px 8px;
   }
   .promo-cat-tile{
-    position:relative; aspect-ratio:1/1; border-radius:10px; overflow:hidden; cursor:pointer;
-    background:var(--black); border:1px solid var(--border);
-    display:flex; align-items:flex-end; justify-content:center;
-    box-shadow:0 4px 14px rgba(0,0,0,.12); transition:transform .15s;
+    position:relative; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:7px;
   }
-  .promo-cat-tile:hover{ transform:translateY(-3px); }
+  .promo-cat-tile-circle{
+    position:relative; width:100%; aspect-ratio:1/1; border-radius:50%; overflow:hidden;
+    background:linear-gradient(135deg,#181818,#0a0a0a); border:1px solid var(--border);
+    box-shadow:0 4px 14px rgba(0,0,0,.14); transition:transform .15s;
+  }
+  .promo-cat-tile:hover .promo-cat-tile-circle{ transform:translateY(-3px) scale(1.03); }
   .promo-cat-tile .tile-bg{
     position:absolute; inset:0; background-size:cover; background-position:center;
-    opacity:.55;
-  }
-  .promo-cat-tile:not(.has-photo){ background:linear-gradient(135deg,#181818,#0a0a0a); }
-  .promo-cat-tile::after{
-    content:''; position:absolute; inset:0;
-    background:linear-gradient(0deg, rgba(0,0,0,.75) 0%, rgba(0,0,0,.15) 65%, rgba(0,0,0,.05) 100%);
   }
   .promo-cat-tile-label{
-    position:relative; z-index:1; color:#fff; font-size:10px; font-weight:800;
-    text-transform:uppercase; letter-spacing:.3px; text-align:center; padding:7px 5px;
+    color:var(--ink); font-size:10px; font-weight:800;
+    text-transform:uppercase; letter-spacing:.3px; text-align:center;
     line-height:1.2;
   }
   .promo-cat-badge{
-    position:absolute; top:5px; right:5px; z-index:2;
+    position:absolute; top:-4px; right:2px; z-index:2;
     background:#e0293e; color:#fff; font-size:8px; font-weight:800;
     text-transform:uppercase; letter-spacing:.3px; padding:3px 6px; border-radius:5px;
     box-shadow:0 2px 6px rgba(0,0,0,.35);
   }
   @media (max-width:680px){
-    .promo-cat-grid{ grid-template-columns:repeat(4,1fr); gap:6px; }
-    .promo-cat-tile-label{ font-size:9px; padding:6px 4px; }
-    .promo-cat-badge{ font-size:7px; padding:2px 5px; top:4px; right:4px; }
+    .promo-cat-grid{ grid-template-columns:repeat(4,1fr); gap:12px 6px; }
+    .promo-cat-tile-label{ font-size:9px; }
+    .promo-cat-badge{ font-size:7px; padding:2px 5px; top:-3px; right:0; }
   }
 
   /* Grade de categorias */
@@ -2177,18 +2174,21 @@
       const tile = document.createElement('div');
       tile.className = 'promo-cat-tile' + (photoUrl ? ' has-photo' : '');
       tile.onclick = () => goToCategory(sample ? sample.category : cat);
+      const circle = document.createElement('div');
+      circle.className = 'promo-cat-tile-circle';
       if(photoUrl){
         const bg = document.createElement('div');
         bg.className = 'tile-bg';
         bg.style.backgroundImage = 'url(' + photoUrl + ')';
-        tile.appendChild(bg);
+        circle.appendChild(bg);
       }
       if(cat === 'Conjunto Infantil'){
         const badge = document.createElement('div');
         badge.className = 'promo-cat-badge';
         badge.textContent = 'Novidades';
-        tile.appendChild(badge);
+        circle.appendChild(badge);
       }
+      tile.appendChild(circle);
       const label = document.createElement('div');
       label.className = 'promo-cat-tile-label';
       label.textContent = cat;
