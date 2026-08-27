@@ -1992,6 +1992,14 @@
      o mouse ou tocar na foto — assim o cliente já vê as duas fotos rolando a página
      normalmente. Funciona pra qualquer produto automaticamente — não precisa configurar
      nada peça por peça além de subir a segunda foto no cadastro. */
+  // Promoção "-20% pagamento à vista": só vale pras Bermudas Lisas (não as Hurley
+  // nem as outras Nike de fileira/logo), que ficam sempre 49,90 fixo.
+  function isAvistaPromo(it){
+    return it.category === 'Bermudas Promoção' && (it.name || '').includes('Lisa');
+  }
+  function avistaPrice(it){
+    return Math.round(it.price * 0.8 * 100) / 100;
+  }
   function wireImageSwap(imgEl, frontUrl, backUrl){
     if(!imgEl || !backUrl) return;
     let showingBack = false;
@@ -2082,10 +2090,10 @@
       cur.textContent = formatPrice(it.price);
       priceRow.appendChild(cur);
       body.appendChild(priceRow);
-      if(it.category === 'Bermudas Promoção'){
+      if(isAvistaPromo(it)){
         const avista = document.createElement('div');
         avista.className = 'avista-badge';
-        avista.textContent = '-20% pagamento à vista';
+        avista.textContent = '-20% à vista: ' + formatPrice(avistaPrice(it));
         body.appendChild(avista);
       }
     }
@@ -2232,6 +2240,15 @@
     allUsedCategories().forEach(cat => {
       const catItems = items.filter(it => it.category === cat);
       if(!catItems.length) return;
+      // Bermudas Lisas (as da promoção -20% à vista) ficam agrupadas juntas na
+      // fileira, em vez de espalhadas entre as Hurley e as outras Nike.
+      if(cat === 'Bermudas Promoção'){
+        catItems.sort((a, b) => {
+          const aLisa = isAvistaPromo(a) ? 0 : 1;
+          const bLisa = isAvistaPromo(b) ? 0 : 1;
+          return aLisa - bLisa;
+        });
+      }
       const section = document.createElement('div');
       section.className = 'cat-carousel-section';
       section.id = catSlug(cat);
@@ -2354,10 +2371,10 @@
       cur.className = 'price-new';
       cur.textContent = formatPrice(it.price);
       itemModalPrice.appendChild(cur);
-      if(it.category === 'Bermudas Promoção'){
+      if(isAvistaPromo(it)){
         const avista = document.createElement('span');
         avista.className = 'avista-badge';
-        avista.textContent = '-20% pagamento à vista';
+        avista.textContent = '-20% à vista: ' + formatPrice(avistaPrice(it));
         itemModalPrice.appendChild(avista);
       }
     } else {
