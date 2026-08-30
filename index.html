@@ -1116,12 +1116,12 @@
       <div class="field">
         <label>Mensagem do WhatsApp — "Comprar" (produto único)</label>
         <textarea id="whatsappMsgSingleInput" rows="5" placeholder="Olá! Quero comprar esta peça: {nome} (Código {codigo}) - Tamanho: {tamanho} - R$ {preco}"></textarea>
-        <div class="hint" style="margin-top:4px;">Use: {nome} {codigo} {tamanho} {quantidade} {preco} — escreva "R$" antes de {preco} se quiser o símbolo (o campo já traz só o número).</div>
+        <div class="hint" style="margin-top:4px;">Use: {nome} {codigo} {tamanho} {quantidade} {preco} {foto} — escreva "R$" antes de {preco} se quiser o símbolo (o campo já traz só o número). {foto} vira o link da foto do produto — toque nele na mensagem pra abrir a imagem.</div>
       </div>
       <div class="field">
         <label>Mensagem do WhatsApp — Carrinho</label>
         <textarea id="whatsappMsgCartInput" rows="5" placeholder="Olá! Quero comprar as peças abaixo na {loja}:&#10;&#10;{itens}&#10;&#10;Total: R$ {total}"></textarea>
-        <div class="hint" style="margin-top:4px;">Use: {loja} {itens} {total} — {itens} vira automaticamente a lista de peças do carrinho (nome, código, tamanho e preço de cada uma).</div>
+        <div class="hint" style="margin-top:4px;">Use: {loja} {itens} {total} — {itens} vira automaticamente a lista de peças do carrinho, já com nome, código, tamanho, preço e o link da foto de cada uma.</div>
       </div>
 
       <div class="panel-actions">
@@ -2451,7 +2451,8 @@
         name: activeModalItem.name,
         size: modalSelectedSize,
         qty: modalQty,
-        price: activeModalItem.price
+        price: activeModalItem.price,
+        image: activeModalItem.image || ''
       });
     }
     saveCart();
@@ -2476,7 +2477,8 @@
     quantidade: ['quantidade', 'qtd', 'qtde'],
     loja: ['loja', 'nome da loja'],
     itens: ['itens', 'pecas', 'produtos', 'lista'],
-    total: ['total', 'valor total']
+    total: ['total', 'valor total'],
+    foto: ['foto', 'imagem', 'foto do produto', 'link da foto', 'link foto']
   };
   // Replaces {placeholder} tokens in a template. Matching ignores accents/case, so
   // {Código}, {codigo} and {Cód} all resolve to vars.codigo, etc.
@@ -2504,7 +2506,7 @@
     if(whatsappMsgSingle && whatsappMsgSingle.trim()){
       message = fillTemplate(whatsappMsgSingle, {
         codigo: activeModalItem.code, nome: activeModalItem.name, tamanho: modalSelectedSize,
-        quantidade: String(modalQty), preco: precoPlain
+        quantidade: String(modalQty), preco: precoPlain, foto: activeModalItem.image || ''
       });
     } else {
       const lines = [];
@@ -2515,6 +2517,7 @@
       lines.push('Tamanho: ' + modalSelectedSize);
       lines.push('Quantidade: ' + modalQty);
       if(precoTxt) lines.push('Preço: ' + precoTxt);
+      if(activeModalItem.image) lines.push('Foto: ' + activeModalItem.image);
       lines.push('');
       lines.push('(Por favor, não altere esta mensagem — o código ajuda a loja a localizar a peça certa.)');
       message = lines.join('\n');
@@ -2594,6 +2597,7 @@
       const itensTxt = cart.map(c => {
         let line = '🛍️ ' + c.name + ' — Código: ' + c.code + ' — Tamanho: ' + c.size + ' — Qtd: ' + c.qty;
         if(c.price != null) line += ' — R$ ' + formatPrice(c.price).replace('R$ ', '');
+        if(c.image) line += '\n   Foto: ' + c.image;
         return line;
       }).join('\n');
       const totalNum = cart.reduce((sum, c) => sum + ((c.price != null ? Number(c.price) : 0) * c.qty), 0);
@@ -2608,6 +2612,7 @@
         lines.push('Peça: ' + c.name);
         lines.push('Tamanho: ' + c.size);
         lines.push('Quantidade: ' + c.qty);
+        if(c.image) lines.push('Foto: ' + c.image);
         lines.push('---');
       });
       lines.push('');
