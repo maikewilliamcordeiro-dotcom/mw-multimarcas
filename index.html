@@ -549,6 +549,34 @@
   .stock-compare-diff{ font-size:11px; color:var(--muted); margin-top:8px; }
   .stock-compare-diff .up{ color:#1a8a4a; font-weight:700; }
   .stock-compare-diff .down{ color:var(--red); font-weight:700; }
+  /* ---------- VISITAS (analytics) ---------- */
+  .vis-period{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+  .vis-period button{ border:1px solid var(--border); background:#fff; border-radius:999px; padding:7px 14px; font-size:12.5px; font-weight:600; cursor:pointer; }
+  .vis-period button.sel{ background:var(--admin-blue); border-color:var(--admin-blue); color:#fff; }
+  .vis-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; }
+  @media (max-width:640px){ .vis-kpis{ grid-template-columns:1fr 1fr; } }
+  .vis-kpi{ border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .vis-kpi .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:700; }
+  .vis-kpi .num{ font-size:26px; font-weight:800; margin-top:4px; line-height:1.1; }
+  .vis-kpi .sub{ font-size:11px; color:var(--muted); margin-top:2px; }
+  .vis-section-title{ font-size:14px; margin:18px 0 10px; }
+  .vis-src-row{ display:grid; grid-template-columns:140px 1fr 44px; align-items:center; gap:10px; margin-bottom:8px; font-size:13px; }
+  .vis-src-row .name{ font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .vis-bar{ height:14px; border-radius:4px; background:rgba(0,0,0,.05); overflow:hidden; }
+  .vis-bar > span{ display:block; height:100%; border-radius:4px; background:var(--admin-blue); }
+  .vis-src-row .val{ text-align:right; font-weight:800; }
+  .vis-src-row .extra{ grid-column:2 / 4; font-size:11px; color:var(--muted); margin-top:-4px; }
+  .vis-days{ display:flex; align-items:flex-end; gap:3px; height:130px; border-bottom:1px solid var(--border); padding-top:16px; }
+  .vis-day{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; min-width:0; position:relative; }
+  .vis-day .b{ width:100%; max-width:28px; background:var(--admin-blue); border-radius:3px 3px 0 0; min-height:1px; }
+  .vis-day .n{ font-size:10px; font-weight:700; color:var(--muted); margin-bottom:2px; }
+  .vis-days-labels{ display:flex; gap:3px; margin-top:4px; }
+  .vis-days-labels span{ flex:1; text-align:center; font-size:9.5px; color:var(--muted); min-width:0; overflow:hidden; }
+  .vis-links .row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+  .vis-links .row b{ min-width:130px; font-size:13px; }
+  .vis-links .row input{ flex:1; min-width:180px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:#faf9f8; }
+  .vis-links .row button{ border:1px solid var(--border); background:#fff; border-radius:7px; padding:7px 12px; font-size:12px; font-weight:600; cursor:pointer; }
+  .vis-empty{ padding:18px; text-align:center; color:var(--muted); font-size:13px; border:1px dashed var(--border); border-radius:10px; }
 
   .stock-log-list{ display:flex; flex-direction:column; gap:6px; max-height:320px; overflow:auto; }
   .stock-log-item{
@@ -967,6 +995,7 @@
       </div>
       <nav class="admin-tabbar">
         <button class="tab-btn admin-nav-btn active" data-tab="itens">Produtos</button>
+        <button class="tab-btn admin-nav-btn" data-tab="visitas">Visitas</button>
         <button class="tab-btn admin-nav-btn" data-tab="estoque">Estoque</button>
         <button class="tab-btn admin-nav-btn" data-tab="colecoes">Coleções</button>
         <button class="tab-btn admin-nav-btn" data-tab="galeria">Galeria</button>
@@ -994,6 +1023,26 @@
           <tbody id="ownerList"></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- VISITAS TAB -->
+    <div class="tab-pane" id="tab-visitas">
+      <div class="admin-table-header">
+        <h2 style="font-size:16px; margin:0;">Visitas no site</h2>
+        <button class="btn btn-ghost btn-sm" id="visRefreshBtn" type="button">Atualizar</button>
+      </div>
+      <div class="vis-period" id="visPeriod">
+        <button type="button" data-days="0">Hoje</button>
+        <button type="button" data-days="7" class="sel">7 dias</button>
+        <button type="button" data-days="30">30 dias</button>
+        <button type="button" data-days="90">90 dias</button>
+      </div>
+      <div id="visContent"><div class="vis-empty">Carregando...</div></div>
+
+      <hr class="divider">
+      <h2 class="vis-section-title" style="margin-top:0;">Links com rastreio</h2>
+      <p class="hint" style="margin-bottom:12px;">Use estes links em cada lugar onde você divulga a loja. Assim o painel sabe exatamente de onde a pessoa veio (o Instagram e o WhatsApp nem sempre avisam sozinhos).</p>
+      <div class="vis-links" id="visLinks"></div>
     </div>
 
     <!-- ESTOQUE TAB -->
@@ -1607,6 +1656,233 @@
     stockLog.unshift({ id: uid(), itemName: itemName, delta: delta, type: type, date: new Date().toISOString() });
     await sb.from('stock_movements').insert({ product_id: productId, product_name: itemName, delta: delta, type: type });
   }
+
+  /* ---------- VISITAS: RASTREIO (grava na tabela site_events do Supabase) ---------- */
+  const VIS_SOURCE_LABELS = {
+    instagram:'Instagram', instagram_stories:'Instagram Stories', facebook:'Facebook', whatsapp:'WhatsApp',
+    whatsapp_status:'Status do WhatsApp', google:'Google / busca', tiktok:'TikTok', youtube:'YouTube', direto:'Direto / sem origem'
+  };
+  function visSourceLabel(src){ return VIS_SOURCE_LABELS[src] || src || 'Direto / sem origem'; }
+  function visRandId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+  function visNoTrack(){
+    try { return localStorage.getItem('mw_notrack') === '1'; } catch(e){ return false; }
+  }
+  function visDetectSource(){
+    const params = new URLSearchParams(location.search);
+    let src = (params.get('utm_source') || params.get('origem') || params.get('src') || params.get('ref') || '').toLowerCase().trim();
+    const aliases = { ig:'instagram', insta:'instagram', bio:'instagram', stories:'instagram_stories', story:'instagram_stories',
+      wpp:'whatsapp', zap:'whatsapp', whats:'whatsapp', wa:'whatsapp', status:'whatsapp_status', fb:'facebook', face:'facebook' };
+    if(aliases[src]) src = aliases[src];
+    if(src) return src.replace(/[^a-z0-9_\-]/g, '').slice(0, 40) || 'direto';
+    const ua = navigator.userAgent || '';
+    if(/Instagram/i.test(ua)) return 'instagram';
+    if(/FBAN|FBAV|FB_IAB|FBIOS/i.test(ua)) return 'facebook';
+    if(params.get('igshid') || params.get('igsh')) return 'instagram';
+    const ref = document.referrer || '';
+    let host = '';
+    try { host = ref ? new URL(ref).hostname.toLowerCase() : ''; } catch(e){}
+    if(!host || host === location.hostname) return params.get('fbclid') ? 'instagram' : 'direto';
+    if(host.includes('instagram')) return 'instagram';
+    if(host.includes('facebook') || host === 'fb.me' || host.startsWith('l.facebook') || host.startsWith('lm.facebook')) return 'facebook';
+    if(host.includes('whatsapp') || host === 'wa.me') return 'whatsapp';
+    if(host.includes('google') || host.includes('bing') || host.includes('yahoo') || host.includes('duckduckgo')) return 'google';
+    if(host.includes('tiktok')) return 'tiktok';
+    if(host.includes('youtube') || host === 'youtu.be') return 'youtube';
+    return host.replace(/^www\./, '').slice(0, 40);
+  }
+  function visSession(){
+    let visitor = null, sess = null;
+    try {
+      visitor = localStorage.getItem('mw_vid');
+      if(!visitor){ visitor = visRandId(); localStorage.setItem('mw_vid', visitor); }
+    } catch(e){ visitor = visitor || visRandId(); }
+    try { sess = JSON.parse(sessionStorage.getItem('mw_sess') || 'null'); } catch(e){}
+    let isNew = false;
+    if(!sess || !sess.id){
+      sess = { id: visRandId(), source: visDetectSource() };
+      isNew = true;
+      try { sessionStorage.setItem('mw_sess', JSON.stringify(sess)); } catch(e){}
+    }
+    return { visitor: visitor, id: sess.id, source: sess.source, isNew: isNew };
+  }
+  function trackEvent(eventName, item){
+    try {
+      if(currentSession || visNoTrack()) return; // não conta o próprio lojista
+      if(window.location.pathname.toLowerCase().replace(/\/+$/, '').endsWith('/adm')) return;
+      const s = visSession();
+      const row = {
+        event: eventName, source: s.source, visitor_id: s.visitor, session_id: s.id,
+        device: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || '') ? 'celular' : 'computador'
+      };
+      if(item){
+        row.product_code = String(item.code || '').slice(0, 60);
+        row.product_name = String(item.name || '').slice(0, 160);
+      }
+      if(eventName === 'visita'){
+        row.referrer = (document.referrer || '').slice(0, 300);
+        row.landing = (location.pathname + location.search).slice(0, 300);
+      }
+      sb.from('site_events').insert(row).then(() => {}, () => {});
+    } catch(e){}
+  }
+  function trackVisitOnce(){
+    try {
+      if(currentSession || visNoTrack()) return;
+      const s = visSession();
+      if(s.isNew) trackEvent('visita');
+    } catch(e){}
+  }
+
+  /* ---------- VISITAS: PAINEL ---------- */
+  let visDays = 7;
+  function visStartDate(days){
+    const d = new Date(); d.setHours(0,0,0,0);
+    if(days > 0) d.setDate(d.getDate() - (days - 1));
+    return d;
+  }
+  function visDayKey(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  async function visFetch(start){
+    const all = [];
+    const PAGE = 1000;
+    for(let from = 0; from < 50000; from += PAGE){
+      const { data, error } = await sb.from('site_events')
+        .select('event,source,visitor_id,session_id,product_code,product_name,created_at')
+        .gte('created_at', start.toISOString())
+        .order('created_at', { ascending: true })
+        .range(from, from + PAGE - 1);
+      if(error) throw error;
+      all.push(...(data || []));
+      if(!data || data.length < PAGE) break;
+    }
+    return all;
+  }
+  async function renderVisitasTab(){
+    const box = document.getElementById('visContent');
+    if(!box) return;
+    renderVisLinks();
+    box.innerHTML = '<div class="vis-empty">Carregando...</div>';
+    let rows;
+    try { rows = await visFetch(visStartDate(visDays)); }
+    catch(err){
+      box.innerHTML = '<div class="vis-empty">Não consegui ler as visitas. Confira se a tabela <b>site_events</b> foi criada no Supabase (SQL de instalação).<br><small>' + escapeHtml(err.message || String(err)) + '</small></div>';
+      return;
+    }
+    const visits = rows.filter(r => r.event === 'visita');
+    const sessSource = {};
+    visits.forEach(r => { sessSource[r.session_id] = r.source || 'direto'; });
+    const people = new Set(visits.map(r => r.visitor_id));
+    const viewSess = new Set(rows.filter(r => r.event === 'produto').map(r => r.session_id));
+    const waRows = rows.filter(r => r.event === 'whatsapp' || r.event === 'whatsapp_carrinho');
+    const waSess = new Set(waRows.map(r => r.session_id));
+
+    const pct = (a, b) => b ? Math.round(a * 100 / b) + '% das visitas' : '';
+    let html = '<div class="vis-kpis">' +
+      '<div class="vis-kpi"><div class="lbl">Visitas</div><div class="num">' + visits.length + '</div><div class="sub">entradas no site</div></div>' +
+      '<div class="vis-kpi"><div class="lbl">Pessoas</div><div class="num">' + people.size + '</div><div class="sub">aparelhos diferentes</div></div>' +
+      '<div class="vis-kpi"><div class="lbl">Abriram produto</div><div class="num">' + viewSess.size + '</div><div class="sub">' + pct(viewSess.size, visits.length) + '</div></div>' +
+      '<div class="vis-kpi"><div class="lbl">Chamaram no WhatsApp</div><div class="num">' + waSess.size + '</div><div class="sub">' + pct(waSess.size, visits.length) + '</div></div>' +
+    '</div>';
+
+    if(!visits.length && !rows.length){
+      html += '<div class="vis-empty">Nenhuma visita registrada nesse período ainda.<br>As visitas começam a contar a partir de agora (visitas suas, logado no painel, não entram na conta).</div>';
+      box.innerHTML = html;
+      return;
+    }
+
+    // Por origem
+    const bySrc = {};
+    visits.forEach(r => {
+      const k = r.source || 'direto';
+      bySrc[k] = bySrc[k] || { v:0, people:new Set(), wa:0 };
+      bySrc[k].v++; bySrc[k].people.add(r.visitor_id);
+    });
+    waSess.forEach(sid => { const k = sessSource[sid]; if(k && bySrc[k]) bySrc[k].wa++; });
+    const srcList = Object.keys(bySrc).map(k => ({ k:k, ...bySrc[k] })).sort((a,b) => b.v - a.v);
+    const maxSrc = Math.max(1, ...srcList.map(x => x.v));
+    html += '<h3 class="vis-section-title">De onde as pessoas vieram</h3>';
+    srcList.forEach(x => {
+      html += '<div class="vis-src-row"><span class="name" title="' + escapeHtml(visSourceLabel(x.k)) + '">' + escapeHtml(visSourceLabel(x.k)) + '</span>' +
+        '<div class="vis-bar"><span style="width:' + Math.max(2, Math.round(x.v * 100 / maxSrc)) + '%"></span></div>' +
+        '<span class="val">' + x.v + '</span>' +
+        '<span class="extra">' + x.people.size + ' pessoa' + (x.people.size === 1 ? '' : 's') + ' · ' + x.wa + ' chamaram no WhatsApp</span></div>';
+    });
+    html += '<p class="hint">"Direto / sem origem" = digitou o endereço, salvou nos favoritos ou veio de um app que não informa a origem (o WhatsApp geralmente cai aqui). Use os links com rastreio abaixo pra separar melhor.</p>';
+
+    // Por dia
+    if(visDays > 1){
+      const counts = {};
+      visits.forEach(r => { const k = visDayKey(new Date(r.created_at)); counts[k] = (counts[k] || 0) + 1; });
+      const days = [];
+      const start = visStartDate(visDays);
+      for(let i = 0; i < visDays; i++){ const d = new Date(start); d.setDate(start.getDate() + i); days.push(d); }
+      const maxDay = Math.max(1, ...days.map(d => counts[visDayKey(d)] || 0));
+      const every = visDays <= 7 ? 1 : (visDays <= 30 ? 5 : 15);
+      html += '<h3 class="vis-section-title">Visitas por dia</h3><div class="vis-days">';
+      days.forEach(d => {
+        const c = counts[visDayKey(d)] || 0;
+        html += '<div class="vis-day" title="' + d.toLocaleDateString('pt-BR') + ': ' + c + ' visita(s)">' +
+          (visDays <= 30 && c ? '<span class="n">' + c + '</span>' : '') +
+          '<div class="b" style="height:' + Math.round(c * 100 / maxDay) + '%"></div></div>';
+      });
+      html += '</div><div class="vis-days-labels">';
+      days.forEach((d, i) => {
+        const lbl = visDays <= 7 ? d.toLocaleDateString('pt-BR', { weekday:'short' }).replace('.', '') : (i % every === 0 ? d.getDate() + '/' + (d.getMonth()+1) : '');
+        html += '<span>' + lbl + '</span>';
+      });
+      html += '</div>';
+    }
+
+    // Produtos
+    const prod = {};
+    rows.forEach(r => {
+      if(!r.product_code || !['produto','whatsapp'].includes(r.event)) return;
+      const k = r.product_code;
+      prod[k] = prod[k] || { name: r.product_name || k, code: k, views:0, wa:0 };
+      if(r.event === 'produto') prod[k].views++; else prod[k].wa++;
+    });
+    const prodList = Object.values(prod).sort((a,b) => (b.views - a.views) || (b.wa - a.wa)).slice(0, 15);
+    if(prodList.length){
+      html += '<h3 class="vis-section-title">Produtos mais vistos</h3><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Produto</th><th>Aberturas</th><th>Chamaram no Whats</th></tr></thead><tbody>';
+      prodList.forEach(p => {
+        html += '<tr><td><span class="row-name">' + escapeHtml(p.name) + '</span><span class="row-code">' + escapeHtml(p.code) + '</span></td><td>' + p.views + '</td><td>' + p.wa + '</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    box.innerHTML = html;
+  }
+  function renderVisLinks(){
+    const wrap = document.getElementById('visLinks');
+    if(!wrap || wrap.dataset.ready) return;
+    wrap.dataset.ready = '1';
+    const base = location.origin + '/';
+    const links = [
+      ['Bio do Instagram', 'instagram'], ['Stories do Instagram', 'instagram_stories'],
+      ['Grupos / conversas WhatsApp', 'whatsapp'], ['Status do WhatsApp', 'whatsapp_status'],
+      ['Facebook', 'facebook'], ['TikTok', 'tiktok']
+    ];
+    wrap.innerHTML = links.map(l => {
+      const url = base + '?utm_source=' + l[1];
+      return '<div class="row"><b>' + l[0] + '</b><input type="text" readonly value="' + url + '"><button type="button" data-url="' + url + '">Copiar</button></div>';
+    }).join('');
+    wrap.querySelectorAll('button[data-url]').forEach(btn => {
+      btn.onclick = async () => {
+        const url = btn.dataset.url;
+        try { await navigator.clipboard.writeText(url); }
+        catch(e){ const inp = btn.previousElementSibling; inp.select(); document.execCommand('copy'); }
+        btn.textContent = 'Copiado!';
+        setTimeout(() => { btn.textContent = 'Copiar'; }, 1500);
+      };
+    });
+  }
+  document.querySelectorAll('#visPeriod button').forEach(b => {
+    b.onclick = () => {
+      document.querySelectorAll('#visPeriod button').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+      visDays = Number(b.dataset.days);
+      renderVisitasTab();
+    };
+  });
+  document.getElementById('visRefreshBtn').onclick = renderVisitasTab;
 
   async function loadAllData(){
     const [prodRes, bannerRes, tagRes, settRes, bankRes, folderRes, adminRes] = await Promise.all([
@@ -2353,6 +2629,7 @@
   /* ---------- ITEM DETAIL MODAL ---------- */
   function openItemModal(it){
     activeModalItem = it;
+    trackEvent('produto', it);
     modalSelectedSize = (it.sizes && it.sizes.find(sz => !isSizeDisabled(it, sz) && !(it.disabledSizes||[]).includes(sz))) || null;
     modalQty = 1;
     itemModalCat.textContent = it.category || '';
@@ -2522,6 +2799,7 @@
       lines.push('(Por favor, não altere esta mensagem — o código ajuda a loja a localizar a peça certa.)');
       message = lines.join('\n');
     }
+    trackEvent('whatsapp', activeModalItem);
     openWhatsapp(message);
     itemOverlay.classList.remove('open');
   };
@@ -2619,6 +2897,8 @@
       lines.push('(Por favor, não altere esta mensagem — os códigos ajudam a loja a localizar as peças certas.)');
       message = lines.join('\n');
     }
+    trackEvent('whatsapp_carrinho');
+    cart.forEach(c => trackEvent('whatsapp', c));
     openWhatsapp(message);
     cartOverlay.classList.remove('open');
   };
@@ -3216,6 +3496,7 @@
 
   function openPanel(){
     ownerMode = true;
+    try { localStorage.setItem('mw_notrack', '1'); } catch(e){}
     overlay.classList.add('open');
     const emailEl = document.getElementById('adminUserEmail');
     if(emailEl) emailEl.textContent = (currentSession && currentSession.user && currentSession.user.email) ? ('Logado como ' + currentSession.user.email) : '';
@@ -3618,6 +3899,7 @@
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      if(btn.dataset.tab === 'visitas') renderVisitasTab();
     };
   });
 
@@ -3838,6 +4120,7 @@
   renderCarousel();
   resetCarouselTimer();
   updateCartBadge();
+  if(!window.location.pathname.toLowerCase().replace(/\/+$/, '').endsWith('/adm')) trackVisitOnce();
 
   /* ---------- ADMIN ACCESS VIA URL (/adm) ---------- */
   const urlPath = window.location.pathname.toLowerCase().replace(/\/+$/, '');
