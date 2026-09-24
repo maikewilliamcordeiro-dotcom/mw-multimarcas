@@ -671,6 +671,13 @@
   .item-modal-info .code{ font-size:12px; color:var(--muted); margin-bottom:8px; }
   .item-modal-info .desc{ font-size:13px; color:#514c47; line-height:1.5; margin-bottom:12px; }
   .size-choice-label{ font-size:12px; font-weight:700; margin-bottom:6px; display:block; }
+  .color-picker{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:center; }
+  .color-dot{ width:28px; height:28px; border-radius:50%; border:1px solid rgba(0,0,0,.25); cursor:pointer; padding:0; box-shadow:0 0 0 2px #fff inset; transition:transform .12s; }
+  .color-dot:hover{ transform:scale(1.08); }
+  .color-dot.sel{ outline:2px solid var(--black, #111); outline-offset:2px; }
+  .color-name{ font-size:12px; color:var(--muted); margin-left:2px; }
+  .card-colors{ display:flex; gap:5px; margin:4px 0 2px; }
+  .card-colors span{ width:12px; height:12px; border-radius:50%; border:1px solid rgba(0,0,0,.25); display:inline-block; }
   .qty-row{ display:flex; align-items:center; gap:10px; margin:14px 0; }
   .qty-stepper{ display:flex; align-items:center; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
   .qty-stepper button{ border:none; background:#f4f0ea; width:32px; height:32px; font-size:16px; cursor:pointer; }
@@ -1360,6 +1367,10 @@
         <div class="desc" id="itemModalDesc"></div>
         <div class="stock-note" id="itemModalStockNote" style="display:none;"></div>
 
+        <div id="itemModalColorsWrap" style="display:none;">
+          <span class="size-choice-label">Cor: <span class="color-name" id="itemModalColorName"></span></span>
+          <div class="color-picker" id="itemModalColors"></div>
+        </div>
         <span class="size-choice-label">Escolha o tamanho</span>
         <div class="size-picker" id="itemModalSizes"></div>
 
@@ -1568,6 +1579,7 @@
     return { id: r.id, code: r.code, name: r.name, category: r.category || '', description: r.description || '',
       sizes: r.sizes || [], stock: r.stock || 0, stockBySize: r.stock_by_size || {}, tags: r.tags || [], image: r.image_url || null,
       imageBack: r.image_url_2 || null,
+      colors: Array.isArray(r.colors) ? r.colors.filter(c => c && c.name) : [],
       price: (r.price === undefined || r.price === null) ? null : Number(r.price),
       oldPrice: (r.old_price === undefined || r.old_price === null) ? null : Number(r.old_price) };
   }
@@ -2351,6 +2363,12 @@
     code.className = 'code';
     code.textContent = 'Código: ' + it.code;
     body.appendChild(code);
+    if(it.colors && it.colors.length){
+      const dots = document.createElement('div');
+      dots.className = 'card-colors';
+      it.colors.forEach(c => { const d = document.createElement('span'); d.style.background = c.hex || '#ccc'; d.title = c.name; dots.appendChild(d); });
+      body.appendChild(dots);
+    }
 
     if(it.price != null){
       const priceRow = document.createElement('div');
@@ -2674,6 +2692,8 @@
       wrap.appendChild(span);
       itemModalImgWrap.appendChild(wrap);
     }
+    modalSelectedColor = (it.colors && it.colors.length) ? it.colors[0] : null;
+    renderItemModalColors();
     renderItemModalSizes();
     qtyValue.textContent = modalQty;
 
@@ -2689,6 +2709,33 @@
       buyNowBtn.disabled = false;
     }
     itemOverlay.classList.add('open');
+  }
+  let modalSelectedColor = null;
+  function currentItemImage(){ return (modalSelectedColor && modalSelectedColor.image) || (activeModalItem && activeModalItem.image) || ''; }
+  function currentItemName(){ return activeModalItem.name + (modalSelectedColor ? ' - Cor ' + modalSelectedColor.name : ''); }
+  function renderItemModalColors(){
+    const wrap = document.getElementById('itemModalColorsWrap');
+    const box = document.getElementById('itemModalColors');
+    const cols = (activeModalItem && activeModalItem.colors) || [];
+    box.innerHTML = '';
+    if(!cols.length){ wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    document.getElementById('itemModalColorName').textContent = modalSelectedColor ? modalSelectedColor.name : '';
+    cols.forEach(c => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'color-dot' + (modalSelectedColor === c ? ' sel' : '');
+      b.style.background = c.hex || '#ccc';
+      b.title = c.name;
+      b.setAttribute('aria-label', 'Cor ' + c.name);
+      b.onclick = () => {
+        modalSelectedColor = c;
+        const img = itemModalImgWrap.querySelector('img');
+        if(img && c.image) img.src = c.image;
+        renderItemModalColors();
+      };
+      box.appendChild(b);
+    });
   }
   function renderItemModalSizes(){
     itemModalSizes.innerHTML = '';
@@ -2717,7 +2764,8 @@
 
   function addCurrentToCart(){
     if(!modalSelectedSize){ alert('Escolha um tamanho antes de continuar.'); return false; }
-    const existing = cart.find(c => c.itemId === activeModalItem.id && c.size === modalSelectedSize);
+    const colorName = modalSelectedColor ? modalSelectedColor.name : '';
+    const existing = cart.find(c => c.itemId === activeModalItem.id && c.size === modalSelectedSize && (c.color || '') === colorName);
     if(existing){
       existing.qty += modalQty;
     } else {
@@ -2725,11 +2773,12 @@
         cartId: uid(),
         itemId: activeModalItem.id,
         code: activeModalItem.code,
-        name: activeModalItem.name,
+        name: currentItemName(),
+        color: colorName,
         size: modalSelectedSize,
         qty: modalQty,
         price: activeModalItem.price,
-        image: activeModalItem.image || ''
+        image: currentItemImage()
       });
     }
     saveCart();
@@ -2782,8 +2831,8 @@
     let message;
     if(whatsappMsgSingle && whatsappMsgSingle.trim()){
       message = fillTemplate(whatsappMsgSingle, {
-        codigo: activeModalItem.code, nome: activeModalItem.name, tamanho: modalSelectedSize,
-        quantidade: String(modalQty), preco: precoPlain, foto: activeModalItem.image || ''
+        codigo: activeModalItem.code, nome: currentItemName(), tamanho: modalSelectedSize,
+        quantidade: String(modalQty), preco: precoPlain, foto: currentItemImage()
       });
     } else {
       const lines = [];
@@ -2791,10 +2840,11 @@
       lines.push('');
       lines.push('Código: ' + activeModalItem.code);
       lines.push('Peça: ' + activeModalItem.name);
+      if(modalSelectedColor) lines.push('Cor: ' + modalSelectedColor.name);
       lines.push('Tamanho: ' + modalSelectedSize);
       lines.push('Quantidade: ' + modalQty);
       if(precoTxt) lines.push('Preço: ' + precoTxt);
-      if(activeModalItem.image) lines.push('Foto: ' + activeModalItem.image);
+      if(currentItemImage()) lines.push('Foto: ' + currentItemImage());
       lines.push('');
       lines.push('(Por favor, não altere esta mensagem — o código ajuda a loja a localizar a peça certa.)');
       message = lines.join('\n');
