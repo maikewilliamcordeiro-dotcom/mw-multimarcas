@@ -1,1 +1,1 @@
-{"rewrites":[{"source":"/","destination":"/site-mw.html"},{"source":"/adm","destination":"/site-mw.html"},{"source":"/adm/(.*)","destination":"/site-mw.html"}]}
+{"rewrites":[{"source":"/adm","destination":"/index.html"},{"source":"/adm/(.*)","destination":"/index.html"}]}
