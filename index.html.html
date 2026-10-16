@@ -221,6 +221,23 @@
     max-width:1100px; margin:22px auto 0; padding:0 20px;
     flex-wrap:wrap; gap:10px; align-items:center; justify-content:flex-start;
   }
+  /* Mural do Catálogo da Confecção */
+  .confec-section{ max-width:1100px; margin:26px auto 0; padding:0 20px; display:flex; flex-direction:column; gap:14px; }
+  .confec-eyebrow{ font-size:11px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--red); }
+  .confec-title{ font-size:24px; font-weight:800; letter-spacing:.5px; margin:4px 0 6px; color:var(--ink); }
+  .confec-title span{ color:var(--red); }
+  .confec-sub{ margin:0; font-size:14px; color:#555; max-width:60ch; }
+  .confec-mural{ display:grid; grid-template-columns:repeat(9,1fr); gap:8px; border-radius:14px; overflow:hidden; background:#01011d; padding:8px; text-decoration:none; }
+  .confec-mural img{ width:100%; aspect-ratio:3/4; object-fit:cover; display:block; border-radius:8px; transition:transform .25s ease; }
+  .confec-mural:hover img{ transform:scale(1.03); }
+  .confec-btn{ align-self:flex-start; display:inline-block; background:var(--red); color:#fff; text-decoration:none; padding:13px 24px; border-radius:8px; font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; }
+  .confec-btn:hover{ background:var(--red-dark); }
+  @media (max-width:680px){
+    .confec-section{ padding:0 16px; }
+    .confec-mural{ grid-template-columns:repeat(3,1fr); }
+    .confec-title{ font-size:20px; }
+    .confec-btn{ align-self:stretch; text-align:center; }
+  }
   .details-section{ max-width:1100px; margin:22px auto 0; padding:0 20px; }
   .details-title{
     font-size:20px; font-weight:800; letter-spacing:1px; margin:0 0 14px; color:var(--ink);
@@ -859,6 +876,27 @@
   </div>
 </div>
 
+<!-- Mural do Catálogo da Confecção: fotos de trabalhos feitos + botão que abre /catalogo/ -->
+<section class="confec-section">
+  <div class="confec-head">
+    <span class="confec-eyebrow">Confecção MW Multimarcas</span>
+    <h2 class="confec-title">CATÁLOGO DA <span>CONFECÇÃO</span></h2>
+    <p class="confec-sub">Camisas, polos, moletons e uniformes personalizados com a sua marca. Pedido mínimo de 10 peças.</p>
+  </div>
+  <a class="confec-mural" href="/catalogo/" aria-label="Abrir o catálogo da confecção">
+    <img src="/catalogo/fotos/f9.jpg" alt="Camisa Bloco do Rock 2026" loading="lazy">
+    <img src="/catalogo/fotos/f10.jpg" alt="Camisas Coyote estampadas e bordadas" loading="lazy">
+    <img src="/catalogo/fotos/f1.jpg" alt="Moletom Coyote bordado" loading="lazy">
+    <img src="/catalogo/fotos/f2.jpg" alt="Moletom Auto Peças da Ponte" loading="lazy">
+    <img src="/catalogo/fotos/f3.jpg" alt="Moletom Use Coyote" loading="lazy">
+    <img src="/catalogo/fotos/f5.jpg" alt="Moletom Juninho personal trainer" loading="lazy">
+    <img src="/catalogo/fotos/f6.jpg" alt="Conjunto Hanzena" loading="lazy">
+    <img src="/catalogo/fotos/f8.jpg" alt="Moletom Sports" loading="lazy">
+    <img src="/catalogo/fotos/f7.jpg" alt="Placa MW Multimarcas e camisas Neymar Jr" loading="lazy">
+  </a>
+  <a class="confec-btn" href="/catalogo/">Ver catálogo da confecção &rarr;</a>
+</section>
+
 <!-- Detalhes: vídeos mostrando o produto de perto (sem áudio) -->
 <div class="details-section">
   <p class="details-title">Detalhes</p>
@@ -1494,6 +1532,17 @@
       ctaCategory: 'Conjunto Infantil',
       slides: HERO_INFANTIL_SLIDES,
       cycleMs: 16000
+    },
+    {
+      /* Segundo slide: Catálogo da Confecção (camisas, polos e moletons personalizados) */
+      tag: 'Confecção',
+      eyebrow: 'UNIFORMES E PERSONALIZADOS',
+      titleHtml: 'CATÁLOGO DA<br><span>CONFECÇÃO</span>',
+      priceHtml: 'Camisas, polos e moletons com a sua marca<br><strong>A partir de 10 peças</strong>',
+      ctaUrl: '/catalogo/',
+      ctaLabel: 'Ver catálogo da confecção',
+      slides: ['/catalogo/fotos/f9.jpg','/catalogo/fotos/f1.jpg','/catalogo/fotos/f10.jpg','/catalogo/fotos/f2.jpg'],
+      cycleMs: 16000
     }
   ];
 
@@ -1526,7 +1575,10 @@
     const priceEl = document.getElementById('heroPriceWrap');
     if(priceEl) priceEl.innerHTML = promo.priceHtml;
     const btn = document.getElementById('heroCtaBtn');
-    if(btn) btn.onclick = () => goToCategory(promo.ctaCategory);
+    if(btn){
+      btn.textContent = promo.ctaLabel || 'Ver produto';
+      btn.onclick = promo.ctaUrl ? () => { window.location.href = promo.ctaUrl; } : () => goToCategory(promo.ctaCategory);
+    }
   }
   function renderHeroPromo(idx){
     const textEl = document.getElementById('heroTextWrap');
