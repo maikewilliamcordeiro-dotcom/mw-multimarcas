@@ -1,7 +1,1 @@
-{
-  "rewrites": [
-    { "source": "/", "destination": "/index.html.html" },
-    { "source": "/adm", "destination": "/index.html.html" },
-    { "source": "/adm/(.*)", "destination": "/index.html.html" }
-  ]
-}
+{"rewrites":[{"source":"/","destination":"/index.html_3.html"},{"source":"/adm","destination":"/index.html_3.html"},{"source":"/adm/(.*)","destination":"/index.html_3.html"}]}
