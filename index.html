@@ -49,6 +49,46 @@
   }
   .top-marquee-track span{ font-size:11px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; white-space:nowrap; display:flex; align-items:center; gap:28px; }
   .top-marquee-track span::after{ content:'✦'; color:var(--red); }
+
+  /* Banner do Novo Drop Coyote */
+  .drop-hero{ position:relative; overflow:hidden; color:#fff; padding:36px 20px 40px;
+    background:radial-gradient(ellipse at 78% 40%, rgba(220,30,45,.38), transparent 58%), linear-gradient(135deg,#01011d,#0a1a3a 60%,#160a1f); }
+  .drop-hero-bgword{ position:absolute; right:-2%; bottom:-6%; font-size:clamp(120px,24vw,300px); font-weight:900; line-height:.8;
+    letter-spacing:-6px; color:transparent; -webkit-text-stroke:2px rgba(255,255,255,.07); pointer-events:none; user-select:none; }
+  .drop-hero-inner{ position:relative; z-index:1; max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1.1fr; gap:28px; align-items:center; }
+  .drop-hero-tag{ display:inline-flex; align-items:center; gap:8px; background:var(--red); color:#fff; font-size:11px; font-weight:800;
+    letter-spacing:1.2px; text-transform:uppercase; padding:6px 12px; border-radius:999px; }
+  .drop-dot{ width:7px; height:7px; border-radius:50%; background:#fff; animation:dropPulse 1.4s ease-in-out infinite; }
+  @keyframes dropPulse{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.35; transform:scale(.7); } }
+  .drop-hero-title{ font-size:clamp(34px,5.4vw,58px); font-weight:900; line-height:.95; letter-spacing:-1px; margin:16px 0 12px; }
+  .drop-hero-title span{ color:var(--red); }
+  .drop-hero-sub{ font-size:15px; color:#c9d1ea; margin:0 0 10px; max-width:380px; }
+  .drop-hero-price{ font-size:15px; margin:0 0 22px; color:#fff; }
+  .drop-hero-price strong{ font-size:24px; font-weight:900; margin-left:4px; }
+  .drop-hero-cta{ background:var(--red); color:#fff; border:none; padding:14px 28px; border-radius:8px; font-size:14px; font-weight:800;
+    text-transform:uppercase; letter-spacing:.5px; cursor:pointer; box-shadow:0 8px 24px rgba(220,30,45,.35); }
+  .drop-hero-cta:hover{ background:var(--red-dark); }
+  .drop-hero-models{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .drop-model{ position:relative; margin:0; border-radius:14px; overflow:hidden; background:#e6e6e6; box-shadow:0 18px 40px rgba(0,0,0,.45); }
+  .drop-model img{ display:block; width:100%; height:auto; aspect-ratio:780/1130; object-fit:contain; }
+  .drop-model-a{ transform:rotate(-2.5deg) translateY(10px); }
+  .drop-model-b{ transform:rotate(2.5deg) translateY(-6px); }
+  .drop-sticker{ position:absolute; top:10px; right:10px; background:var(--red); color:#fff; font-size:11px; font-weight:900; letter-spacing:1px;
+    padding:5px 9px; border-radius:6px; transform:rotate(6deg); }
+  @media (max-width:760px){
+    .drop-hero{ padding:26px 16px 32px; }
+    .drop-hero-inner{ grid-template-columns:1fr; gap:22px; }
+    .drop-hero-text{ text-align:center; }
+    .drop-hero-sub{ margin-left:auto; margin-right:auto; }
+    .drop-hero-models{ gap:10px; padding:0 4px; }
+    .drop-model-a{ transform:rotate(-2deg) translateY(6px); }
+    .drop-model-b{ transform:rotate(2deg) translateY(-4px); }
+    .drop-hero-bgword{ bottom:auto; top:38%; right:-6%; }
+  }
+  @media (prefers-reduced-motion:reduce){ .drop-dot{ animation:none; } }
+
+  /* Selo pequeno "Drop novo" em vermelho em cima do nome */
+  .drop-novo-label{ display:block; color:var(--red); font-size:10px; font-weight:900; letter-spacing:1px; text-transform:uppercase; margin-bottom:2px; }
   .hero{
     position:relative; overflow:hidden; min-height:540px;
     background:linear-gradient(135deg,#01011d,#0a1a3a 55%,#132a5c);
@@ -863,18 +903,22 @@
 </div>
 
 <!-- Hero: promoção em destaque. Alterna automaticamente entre os promos definidos em HERO_PROMOS (JS). Pra trocar as fotos de cada promo, edite HERO_PROMOS. -->
-<div class="hero">
-  <div class="hero-photo" id="heroPhotoSlides"></div>
-  <div class="hero-inner hero-grid">
-    <div class="hero-text" id="heroTextWrap">
-      <span class="hero-tag" id="heroTag" style="display:none;"></span>
-      <span class="hero-eyebrow" id="heroEyebrow">ACESSE NOSSO CATÁLOGO</span>
-      <h1 class="hero-title" id="heroTitle">CHEGOU O<br><span>CONJUNTO INFANTIL</span></h1>
-      <p class="hero-price" id="heroPriceWrap"><strong>R$ 69,90</strong></p>
-      <button class="hero-cta" type="button" id="heroCtaBtn">Ver produto</button>
+<section class="drop-hero" aria-label="Novo drop Coyote">
+  <div class="drop-hero-bgword" aria-hidden="true">DROP</div>
+  <div class="drop-hero-inner">
+    <div class="drop-hero-text">
+      <span class="drop-hero-tag"><span class="drop-dot"></span>Drop novo no ar</span>
+      <h1 class="drop-hero-title">NOVO DROP<br><span>COYOTE</span></h1>
+      <p class="drop-hero-sub">Estampas novas, pretas e brancas. Peças limitadas.</p>
+      <p class="drop-hero-price">Cada camisa <strong>R$ 99,90</strong></p>
+      <button class="drop-hero-cta" type="button" id="dropHeroCta">Ver o drop &rarr;</button>
+    </div>
+    <div class="drop-hero-models">
+      <figure class="drop-model drop-model-a"><img src="https://nryhlxzltswavfqgsaez.supabase.co/storage/v1/object/public/product-images/drop-coyote/drop-modelo-branca.jpg" alt="Modelo com camisa branca Coyote High Endz, de costas" width="780" height="1130" fetchpriority="high"></figure>
+      <figure class="drop-model drop-model-b"><img src="https://nryhlxzltswavfqgsaez.supabase.co/storage/v1/object/public/product-images/drop-coyote/drop-modelo-preta.jpg" alt="Modelo com camisa preta Coyote, de frente" width="780" height="1130" fetchpriority="high"><span class="drop-sticker">NOVO</span></figure>
     </div>
   </div>
-</div>
+</section>
 
 <!-- Mural do Catálogo da Confecção: fotos de trabalhos feitos + botão que abre /catalogo/ -->
 <section class="confec-section">
@@ -1512,17 +1556,9 @@
     'https://nryhlxzltswavfqgsaez.supabase.co/storage/v1/object/public/product-images/gallery/1787409872696-mt4hoshkomfss-ChatGPT_Image_22_08_2026__11_26_54.jpg'
   ];
 
-  const HERO_PROMOS = [
-    {
-      tag: 'Novidades',
-      eyebrow: 'ACESSE NOSSO CATÁLOGO',
-      titleHtml: 'CHEGOU O<br><span>CONJUNTO INFANTIL</span>',
-      priceHtml: '<strong>R$ 69,90</strong>',
-      ctaCategory: 'Conjunto Infantil',
-      slides: HERO_INFANTIL_SLIDES,
-      cycleMs: 16000
-    }
-  ];
+  const HERO_PROMOS = [];
+  const dropHeroCta = document.getElementById('dropHeroCta');
+  if(dropHeroCta) dropHeroCta.onclick = () => goToCategory('Coyote');
 
   let heroPromoIndex = 0;
   function paintHeroPromo(idx){
@@ -1569,7 +1605,7 @@
       if(photoCont) photoCont.classList.remove('hero-fade');
     }, 350);
   }
-  paintHeroPromo(0);
+  if(HERO_PROMOS.length) paintHeroPromo(0);
   if(HERO_PROMOS.length > 1){
     function scheduleNextHeroPromo(){
       const currentCycle = HERO_PROMOS[heroPromoIndex].cycleMs || 16000;
@@ -2314,6 +2350,20 @@
      nada peça por peça além de subir a segunda foto no cadastro. */
   // Promoção "-20% pagamento à vista": só vale pras Bermudas Lisas (não as Hurley
   // nem as outras Nike de fileira/logo), que ficam sempre 49,90 fixo.
+  function isDropNovoTag(tag){ return String(tag||'').trim().toLowerCase() === 'drop novo'; }
+  function isDropNovo(it){ return (it.tags||[]).some(isDropNovoTag); }
+  // Fileira da Coyote: camisas do drop novo primeiro, alternando preta e branca.
+  function orderCoyoteItems(list){
+    const drop = list.filter(isDropNovo), rest = list.filter(it => !isDropNovo(it));
+    const isPreta = it => /preta/i.test(it.name || '');
+    const pretas = drop.filter(isPreta), brancas = drop.filter(it => !isPreta(it));
+    const mixed = [];
+    for(let i = 0; i < Math.max(pretas.length, brancas.length); i++){
+      if(pretas[i]) mixed.push(pretas[i]);
+      if(brancas[i]) mixed.push(brancas[i]);
+    }
+    return mixed.concat(rest);
+  }
   function isAvistaPromo(it){
     return it.category === 'Bermudas Promoção' && (it.name || '').includes('Lisa');
   }
@@ -2341,6 +2391,7 @@
     const badgesWrap = document.createElement('div');
     badgesWrap.className = 'badges';
     (it.tags||[]).forEach(tag => {
+      if(isDropNovoTag(tag)) return;
       const b = document.createElement('span');
       b.className = 'badge-pill';
       b.textContent = tag;
@@ -2386,6 +2437,12 @@
       cat.className = 'cat';
       cat.textContent = it.category;
       body.appendChild(cat);
+    }
+    if(isDropNovo(it)){
+      const dl = document.createElement('span');
+      dl.className = 'drop-novo-label';
+      dl.textContent = 'Drop novo';
+      body.appendChild(dl);
     }
     const h3 = document.createElement('h3');
     h3.textContent = it.name;
@@ -2571,8 +2628,9 @@
     if(!wrap) return;
     wrap.innerHTML = '';
     publicCategories().forEach(cat => {
-      const catItems = items.filter(it => it.category === cat);
+      let catItems = items.filter(it => it.category === cat);
       if(!catItems.length) return;
+      if(cat === 'Coyote') catItems = orderCoyoteItems(catItems);
       // Bermudas Lisas (as da promoção -20% à vista) ficam agrupadas juntas na
       // fileira, em vez de espalhadas entre as Hurley e as outras Nike.
       if(cat === 'Bermudas Promoção'){
